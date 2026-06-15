@@ -229,11 +229,12 @@
       }
 
       #editor-container {
-        flex: 2;
+        flex: 1;
         position: relative;
         overflow: hidden;
         display: flex;
         background: rgba(0, 0, 0, 0.2);
+        min-height: 300px;
       }
       
       #line-numbers {
@@ -291,8 +292,9 @@
 
       /* Console / Terminal */
       #log-container {
-        flex: 1;
-        padding: 20px;
+        height: 160px;
+        flex-shrink: 0;
+        padding: 16px 20px;
         font-family: 'JetBrains Mono', monospace;
         font-size: 13px;
         overflow-y: auto;
@@ -342,11 +344,12 @@
       .icon-K { background: #c678dd; } .icon-M { background: #61afef; }
       
       #teacher-feedback {
-        flex: 0.6;
+        height: 100px;
+        flex-shrink: 0;
         background: rgba(0, 229, 255, 0.03);
         backdrop-filter: var(--glass-blur);
         -webkit-backdrop-filter: var(--glass-blur);
-        padding: 24px;
+        padding: 16px 24px;
         font-style: italic;
         color: var(--success);
         overflow-y: auto;
