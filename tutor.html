@@ -432,5 +432,29 @@
     
     <?!= include('Modules'); ?>
     <?!= include('TutorJS'); ?>
+    <canvas id="confetti-canvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999;"></canvas>
+</body>
+</html>
+lse" placeholder="Awaiting logic input..."></textarea>
+          </div>
+          
+          <div id="suggestions-menu">
+            <div id="suggestions-list"></div>
+            <div id="suggestions-doc"></div>
+          </div>
+        </div>
+        
+        <div class="pane-header">Output Stream</div>
+        <div id="log-container"></div>
+        
+        <div class="pane-header" style="background-color: var(--accent); color: white;">Executive Oversight</div>
+        <div id="teacher-feedback">
+          "Welcome to the mainframe. Select a procedural task from the curriculum to begin."
+        </div>
+      </div>
+    </main>
+    
+    <?!= include('Modules'); ?>
+    <?!= include('TutorJS'); ?>
 </body>
 </html>

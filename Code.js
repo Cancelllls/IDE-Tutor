@@ -1025,3 +1025,23 @@ function compileAndRun(filename, code, language, inputBuffer) {
     });
   }
 }
+
+/**
+ * Cloud Progress Syncing
+ */
+function saveProgressCloud(progressString) {
+  try {
+    PropertiesService.getUserProperties().setProperty('academy_progress', progressString);
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function loadProgressCloud() {
+  try {
+    return PropertiesService.getUserProperties().getProperty('academy_progress') || '[]';
+  } catch(e) {
+    return '[]';
+  }
+}

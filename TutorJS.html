@@ -63,6 +63,53 @@ const tokenizerRules = {
 // --- CORE UTILITIES ---
 const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+function updateXP() {
+  const xpCounter = document.getElementById('xp-counter');
+  const xpBar = document.getElementById('xp-bar');
+  if (!xpCounter || !xpBar) return;
+  const currentXP = completedModules.length * 50;
+  xpCounter.innerText = currentXP;
+  const maxXP = courseData.length * 50;
+  const percentage = (currentXP / maxXP) * 100;
+  xpBar.style.width = `${percentage}%`;
+}
+
+function triggerConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const pieces = [];
+  const colors = ['#00e5ff', '#c678dd', '#98c379', '#f0f0f0'];
+  for (let i = 0; i < 120; i++) {
+    pieces.push({
+      x: canvas.width / 2, y: canvas.height / 2 + 100,
+      vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 1) * 30 - 5,
+      size: Math.random() * 8 + 4, color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360, rotSpeed: (Math.random() - 0.5) * 10
+    });
+  }
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let active = false;
+    pieces.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.8; // gravity
+      p.rotation += p.rotSpeed;
+      if (p.y < canvas.height) active = true;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+      ctx.restore();
+    });
+    if (active) requestAnimationFrame(animate);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  animate();
+}
+
 function runLinter() {
   const text = editor.value; lintProblems = []; const stack = []; const lines = text.split('\n');
   for (let r = 0; r < lines.length; r++) {
@@ -225,7 +272,7 @@ const appendToTerminal = (args, type) => {
   const entry = document.createElement('div');
   entry.className = `log-entry log-${type}`;
   const message = Array.from(args).map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
-  entry.innerHTML = `<span style="color: #888; font-size: 10px;">[${new Date().toLocaleTimeString()}]</span> <span style="margin-left:8px;">${message}</span>`;
+  entry.innerHTML = `<span style="color: rgba(255,255,255,0.3); font-size: 10px;">[${new Date().toLocaleTimeString()}]</span> <span style="margin-left:8px;">${message}</span>`;
   logContainer.appendChild(entry);
   logContainer.scrollTop = logContainer.scrollHeight;
 };
@@ -233,15 +280,17 @@ const appendToTerminal = (args, type) => {
 const customConsole = { log: (...a) => appendToTerminal(a, 'info'), error: (...a) => appendToTerminal(a, 'error'), warn: (...a) => appendToTerminal(a, 'warn') };
 
 window.runEditorCode = () => {
-  logContainer.innerHTML = '<div style="color: var(--accent); font-size: 11px; margin-bottom: 10px;">-- EXECUTING PROCEDURE --</div>';
+  logContainer.innerHTML = '<div style="color: var(--accent); font-size: 11px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">-- EXECUTING PROCEDURE --</div>';
   const code = editor.value;
   if (code.trim().length < 2) return;
 
   if (activeLanguage === 'javascript') {
     executeJS(code);
+  } else if (activeLanguage === 'python') {
+    runPythonLocal(code);
   } else {
     // Multi-language Engine Bridge
-    const transpilerMap = { python: 'transpilePython', cpp: 'transpileCPP', java: 'transpileJava' };
+    const transpilerMap = { cpp: 'transpileCPP', java: 'transpileJava' };
     const method = transpilerMap[activeLanguage];
     if (method) {
       google.script.run.withSuccessHandler(jsCode => executeJS(jsCode)).withFailureHandler(e => appendToTerminal([e.message], 'error'))[method](code);
@@ -250,11 +299,86 @@ window.runEditorCode = () => {
 };
 
 function executeJS(jsCode) {
+  // Sandboxed iframe execution to prevent DOM wipeouts
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.sandbox = "allow-scripts";
+  document.body.appendChild(iframe);
+  
+  const listener = function(e) {
+    if (e.data.type === 'log') appendToTerminal(e.data.args, e.data.logType);
+    if (e.data.type === 'prompt') {
+      const v = window.prompt(e.data.msg);
+      appendToTerminal([`[INPUT]: ${v}`], 'warn');
+      iframe.contentWindow.postMessage({ type: 'promptReturn', val: v }, '*');
+    }
+    if (e.data.type === 'done') {
+      verifyChallenge(jsCode);
+      window.removeEventListener('message', listener);
+      iframe.remove();
+    }
+    if (e.data.type === 'error') {
+      appendToTerminal([e.data.msg], 'error');
+      window.removeEventListener('message', listener);
+      iframe.remove();
+    }
+  };
+  window.addEventListener('message', listener);
+
+  const html = `
+    <script>
+      let promptCallback = null;
+      window.addEventListener('message', (e) => {
+        if(e.data.type === 'promptReturn' && promptCallback) promptCallback(e.data.val);
+      });
+      const customConsole = {
+        log: (...a) => parent.postMessage({type: 'log', logType: 'info', args: a}, '*'),
+        warn: (...a) => parent.postMessage({type: 'log', logType: 'warn', args: a}, '*'),
+        error: (...a) => parent.postMessage({type: 'log', logType: 'error', args: a}, '*')
+      };
+      window.console = customConsole;
+      window.prompt = function(msg) {
+         parent.postMessage({type: 'prompt', msg: msg}, '*');
+         // Simulating sync prompt in async environment is complex without Atomics.
+         // For sandboxed security, we sacrifice true sync prompts in this specific mock.
+         return "Prompt Not Fully Supported In Sandbox";
+      };
+      try {
+        ${jsCode}
+        parent.postMessage({type: 'done'}, '*');
+      } catch(err) {
+        parent.postMessage({type: 'error', msg: err.message}, '*');
+      }
+    <\/script>
+  `;
+  iframe.srcdoc = html;
+}
+
+// Client-Side Python WebAssembly Engine
+let pyodideInstance = null;
+async function runPythonLocal(code) {
+  if (!pyodideInstance) {
+    appendToTerminal(['Initializing Python Wasm Engine (Pyodide)... This may take 5-10 seconds.'], 'warn');
+    const script = document.createElement('script');
+    script.src = "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js";
+    document.head.appendChild(script);
+    await new Promise(r => script.onload = r);
+    try {
+      pyodideInstance = await loadPyodide();
+      pyodideInstance.setStdout({ batched: (msg) => appendToTerminal([msg], 'info') });
+      pyodideInstance.setStderr({ batched: (msg) => appendToTerminal([msg], 'error') });
+      appendToTerminal(['Python Wasm Engine Online.'], 'success');
+    } catch(err) {
+      appendToTerminal(['Failed to load Python Wasm: ' + err.message], 'error');
+      return;
+    }
+  }
   try {
-    const executor = new Function('console', 'prompt', `"use strict";\n${jsCode}`);
-    executor(customConsole, (m) => { const v = window.prompt(m); appendToTerminal([`[INPUT]: ${v}`], 'warn'); return v; });
-    verifyChallenge(jsCode);
-  } catch (e) { appendToTerminal([e.message], 'error'); }
+    await pyodideInstance.runPythonAsync(code);
+    verifyChallenge(code);
+  } catch(err) {
+    appendToTerminal([err.message], 'error');
+  }
 }
 
 function verifyChallenge(code) {
@@ -265,7 +389,19 @@ function verifyChallenge(code) {
     if (!completedModules.includes(currentMIdx)) {
       completedModules.push(currentMIdx);
       localStorage.setItem('academy_progress', JSON.stringify(completedModules));
+      
+      // Cloud Sync Integration
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.saveProgressCloud(JSON.stringify(completedModules));
+      }
+      
       renderSidebar();
+      updateXP();
+      
+      // Milestone Gamification
+      if ([9, 19, 29, 39].includes(currentMIdx) || completedModules.length === courseData.length) {
+        triggerConfetti();
+      }
     }
   } else {
     document.getElementById('teacher-feedback').innerHTML = "<span style='color: #ff9800;'>Execution complete. logic verification failed. Review procedure.</span>";
