@@ -17,8 +17,16 @@ function include(filename) {
  * Serves the web application.
  */
 function doGet(e) {
-  var page = (e && e.parameter && e.parameter.page) || 'tutor';
-  var title = page === 'Index' ? 'GAS Zero-Dependency IDE' : 'IDE Tutor';
+  var paramPage = (e && e.parameter && e.parameter.page) ? e.parameter.page.toLowerCase() : 'index';
+  var page = 'Index'; // Default
+  
+  if (paramPage === 'tutor') {
+    page = 'tutor';
+  } else if (paramPage === 'index') {
+    page = 'Index';
+  }
+  
+  var title = page === 'Index' ? 'IDE Tutor: Professional Workspace' : 'IDE Tutor: Learning Center';
   
   return HtmlService.createTemplateFromFile(page)
     .evaluate()
