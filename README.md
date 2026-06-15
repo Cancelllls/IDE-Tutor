@@ -1,75 +1,100 @@
 <p align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg" width="120" alt="VS Code Logo" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg" width="100" alt="IDE Tutor Logo" />
 </p>
 
-<h1 align="center">GAS Cloud IDE: VS Code Clone</h1>
+<h1 align="center">IDE Tutor: Professional Cloud Development Workspace</h1>
 
 <p align="center">
-  <b>Built by <a href="https://github.com/Cancelllls">Cancellls</a></b>
+  <b>A high-fidelity, zero-dependency VS Code clone for Google Apps Script.</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Version-2.0.0-blue.svg" alt="Version" />
+  <img src="https://img.shields.io/badge/Platform-Google%20Apps%20Script-green.svg" alt="Platform" />
+  <img src="https://img.shields.io/badge/License-MIT-orange.svg" alt="License" />
+  <img src="https://img.shields.io/badge/Vanilla-JS-yellow.svg" alt="Vanilla JS" />
 </p>
 
 ---
 
-A 100% self-contained, zero-dependency cloud programming workspace deployed as a Google Apps Script Web App. This project mimics the VS Code experience entirely through native HTML, CSS, and Vanilla JavaScript, requiring zero external libraries or CDNs.
+## 🌟 Overview
 
-## 🚀 Live Demo
-[**Access the IDE Here**](https://script.google.com/macros/s/AKfycbzHoq6fCQz0XK1Cw2wM96rdiaR6YSVvshSGvRqjcJ6oe0lyHO_1QwUIVOJ5FSpzAN85/exec)
+**IDE Tutor** is a sophisticated, browser-based integrated development environment (IDE) built entirely with Vanilla JavaScript, CSS3, and HTML5. It provides a near-native VS Code experience within the Google Apps Script ecosystem, featuring a persistent virtual file system, multi-language transpilation, and a modern, customizable UI.
 
-## ✨ Features
+Designed for educators, students, and developers, it offers a "zero-setup" environment for practicing multiple programming languages directly in the cloud without external dependencies or CDNs.
 
-- **Full Fidelity UI**: Mimics VS Code Dark+ mode with an activity bar, sidebar, editor pane, and terminal.
-- **Persistent Virtual File System (VFS)**: Native persistent file storage utilizing Google Apps Script's `PropertiesService`, allowing users to create, read, update, and delete files dynamically in the browser (pre-seeded with default demo files).
-- **Multi-Language Support**:
-  - **Native JavaScript & Custom GAS DSL**: Execute JS code directly in the browser environment with execution instrumentation.
-  - **Python**: Transpiles range loops, print statements, and interactive inputs.
-  - **C++**: Transpiles `cout`, `cin`, loops, and standard variable declarations.
-  - **Java**: Full-fidelity transpilation including simulated concurrency mocks (`AtomicInteger`, `ExecutorService`, `TimeUnit`), lambda arrow functions, constructor parameter cleaning, and console methods.
-  - **Rust, Go, Ruby, and SQL**: Simulated engines/transpilers for a variety of programming syntaxes.
-  - **HTML/CSS Live Preview**: Direct rendering of HTML/CSS files inside a dedicated live Preview Pane.
-- **Advanced Syntax Highlighting**: Regex-based highlighting engine built from scratch.
-- **Theme Engine**: Support for multiple themes including Dark+, Monokai, and Solarized.
-- **Custom Text Editor**:
-  - Dynamic line numbers.
-  - Tab interception (2-space indentation).
-  - Synced scrolling between line numbers and code.
-  - Real-time Ln/Col status tracking.
-- **Command Palette & VS Code Shortcuts**: Launch commands, toggle panels, switch themes, find-and-replace, and execute files with professional editor shortcuts (e.g. `Ctrl+Shift+P`, `Ctrl+S`, `Ctrl+J`, `Ctrl+B`).
-- **Context Menus**: Native-looking custom right-click menus for the explorer, editor, and view settings.
-- **Terminal Interface**: Command-line style output for execution results.
+## 🚀 Key Features
+
+### 💻 High-Fidelity VS Code Interface
+*   **Modern Aesthetic**: Fully responsive layout with custom themes (Dark+, Monokai, Dracula, Solarized).
+*   **Standard Layout**: Activity Bar, Sidebar, Editor Pane, Command Palette, and Status Bar.
+*   **IntelliSense & Snippets**: Context-aware suggestions and code snippets for over 10 languages.
+*   **Advanced Editor**: Custom-built text editor with sync-scrolling line numbers, tab-interception, and smart indentation.
+
+### 📂 Persistent Virtual File System (VFS)
+*   **Cloud Storage**: Native persistence using Google's `PropertiesService`.
+*   **File Management**: Create, delete, and rename files dynamically.
+*   **State Persistence**: Open tabs and active files are remembered across sessions.
+
+### ⚙️ Multi-Language Execution Engine
+The IDE features a custom-built transpilation layer that maps various languages to JavaScript for browser-side execution:
+*   **JavaScript (ES6+)**: Direct execution with instrumentation.
+*   **Python**: Transpiles loops, conditionals, and standard I/O (using `prompt` for input).
+*   **C++**: Simulates `iostream` (`cout`, `cin`) and standard variable declarations.
+*   **Java**: Advanced simulation including **concurrency mocks** (`AtomicInteger`, `ExecutorService`, `TimeUnit`) and lambda expressions.
+*   **Web Technologies**: Live preview for HTML and CSS files in a dedicated iframe.
+*   **Additional Support**: Syntax highlighting and snippets for Rust, Go, Ruby, and SQL.
 
 ## 🛠 Tech Stack
 
-- **Backend**: Google Apps Script (V8 Runtime).
-- **Frontend**: Vanilla HTML5, CSS3 (Variables), and JavaScript (ES6+).
-- **Deployment**: Managed via `@google/clasp`.
+*   **Backend**: Google Apps Script (V8 Engine).
+*   **Frontend**: Vanilla HTML5, CSS3 (using CSS Variables for themes), and ES6+ JavaScript.
+*   **Tooling**: Managed via `@google/clasp` for streamlined deployment and version control.
 
-## 📦 Local Setup & Deployment
+## 📦 Installation & Deployment
 
-1. **Install Clasp**:
-   ```bash
-   npm install -g @google/clasp
-   ```
+To deploy your own instance of IDE Tutor:
 
-2. **Login to Google**:
-   ```bash
-   clasp login
-   ```
+1.  **Clone the Repository**:
+    ```bash
+    git clone https://github.com/Cancelllls/IDE-Tutor.git
+    cd IDE-Tutor
+    ```
 
-3. **Clone & Push**:
-   ```bash
-   cd gas-compiler-project
-   clasp push
-   ```
+2.  **Authenticate Clasp**:
+    ```bash
+    npx clasp login
+    ```
 
-4. **Deploy**:
-   ```bash
-   clasp deploy --description "Production Release"
-   ```
+3.  **Create a New Script Project** (or link an existing one):
+    ```bash
+    npx clasp create --title "IDE Tutor" --type webapp
+    ```
 
-## 🔒 Security & Privacy
+4.  **Push the Code**:
+    ```bash
+    npx clasp push
+    ```
 
-- **Anonymous Access**: The application is configured for access by "Anyone" (no Google account required).
-- **Isolation**: It runs entirely within the script's execution context. It uses no external tracking, no CDNs, and no third-party scripts, ensuring 100% data privacy.
+5.  **Deploy as Web App**:
+    ```bash
+    npx clasp deploy --description "Initial Release"
+    ```
+
+## 📖 Architecture Note
+
+Unlike traditional IDEs that rely on heavy libraries like Monaco or Ace Editor, **IDE Tutor** is built from the ground up to be **zero-dependency**. The syntax highlighter, code editor, and language transpilers are all custom-implemented to ensure maximum performance and security within the Google Apps Script environment.
+
+## 🤝 Contributing
+
+Contributions are welcome! Whether it's adding a new language transpiler, improving the UI, or fixing bugs, feel free to fork the repo and submit a pull request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ---
 
+<p align="center">
+  Created with ❤️ by <a href="https://github.com/Cancelllls">Cancelllls</a>
+</p>
