@@ -1,39 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JS Academy: Full Curriculum</title>
+    <base target="_top">
+    <title>JS Academy: The Professional Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
       :root {
-        --bg-main: #1e1e1e;
-        --bg-side: #252526;
-        --bg-header: #333333;
+        --bg-main: #121212;
+        --bg-side: rgba(30, 30, 30, 0.7);
+        --bg-header: rgba(24, 24, 24, 0.85);
         --accent: #007acc;
-        --text: #d4d4d4;
-        --text-dim: #858585;
-        --border: #333333;
+        --accent-glow: rgba(0, 122, 204, 0.3);
+        --text: #e0e0e0;
+        --text-dim: #a0a0a0;
+        --text-bright: #ffffff;
+        --border: rgba(255, 255, 255, 0.08);
         --success: #4ec9b0;
+        --glass-blur: blur(16px);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.1);
       }
+      
       body {
         background-color: var(--bg-main);
+        background-image: radial-gradient(circle at top right, rgba(0, 122, 204, 0.05), transparent 400px);
         color: var(--text);
-        font-family: 'Segoe UI', sans-serif;
+        font-family: 'Inter', sans-serif;
         margin: 0;
         display: flex;
         flex-direction: column;
         height: 100vh;
         overflow: hidden;
+        -webkit-font-smoothing: antialiased;
       }
+      
       header {
         background-color: var(--bg-header);
-        padding: 10px 20px;
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        padding: 0 24px;
+        height: 50px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        z-index: 10;
-        border-bottom: 1px solid var(--border);
+        z-index: 100;
+        border-bottom: var(--glass-border);
       }
-      header h1 { margin: 0; font-size: 16px; color: var(--accent); }
-      .status { color: var(--success); font-size: 12px; font-weight: bold; }
+      
+      header h1 { 
+        margin: 0; 
+        font-size: 14px; 
+        text-transform: uppercase; 
+        letter-spacing: 2px;
+        font-weight: 700;
+        color: var(--accent); 
+      }
+      
+      .status { 
+        color: var(--success); 
+        font-size: 11px; 
+        font-weight: 700; 
+        letter-spacing: 1px;
+      }
       
       main {
         display: flex;
@@ -43,123 +72,168 @@
       
       /* Sidebar */
       #sidebar {
-        width: 280px;
+        width: 300px;
         background-color: var(--bg-side);
-        border-right: 1px solid var(--border);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border-right: var(--glass-border);
         display: flex;
         flex-direction: column;
         overflow-y: auto;
       }
+      
       .sidebar-header {
-        padding: 15px;
+        padding: 24px 24px 12px 24px;
         font-size: 11px;
-        font-weight: bold;
+        font-weight: 800;
         color: var(--text-dim);
         text-transform: uppercase;
-        letter-spacing: 1px;
-        border-bottom: 1px solid var(--border);
+        letter-spacing: 1.5px;
+        opacity: 0.6;
       }
-      .module-group { margin-bottom: 5px; }
+      
+      .module-group { margin-bottom: 2px; }
+      
       .module-title {
-        padding: 10px 15px;
-        font-size: 12px;
-        font-weight: bold;
+        padding: 12px 24px;
+        font-size: 13px;
+        font-weight: 600;
         color: #fff;
-        background: #2d2d2d;
-        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.03);
+        transition: all 0.2s;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        cursor: pointer;
       }
+      
+      .module-title:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+      
       .lesson-link {
-        padding: 8px 25px;
-        font-size: 12px;
+        padding: 10px 36px;
+        font-size: 13px;
         color: var(--text-dim);
         cursor: pointer;
-        transition: all 0.2s;
-        border-bottom: 1px solid #2a2d2e;
+        transition: all 0.15s;
+        border-left: 3px solid transparent;
       }
-      .lesson-link:hover { background: #2a2d2e; color: var(--text); }
-      .lesson-link.active { background: #37373d; color: white; border-left: 3px solid var(--accent); }
+      
+      .lesson-link:hover { 
+        background: rgba(255, 255, 255, 0.05); 
+        color: var(--text); 
+      }
+      
+      .lesson-link.active { 
+        background: rgba(0, 122, 204, 0.15); 
+        color: white; 
+        border-left-color: var(--accent);
+        font-weight: 500;
+      }
 
       /* Lesson Pane */
       #lesson-pane {
         flex: 1;
-        padding: 30px;
+        padding: 40px;
         overflow-y: auto;
-        border-right: 1px solid var(--border);
-        max-width: 600px;
-        line-height: 1.6;
+        border-right: var(--glass-border);
+        max-width: 650px;
+        line-height: 1.7;
+        background: rgba(255, 255, 255, 0.01);
       }
-      .module-tag { display: inline-block; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-bottom: 10px; }
-      h2 { color: var(--accent); margin-top: 0; }
-      h3 { color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
-      .challenge-box { background: #262626; border-left: 4px solid var(--success); padding: 15px; margin: 20px 0; }
       
-      .tool-buttons { margin-top: 20px; display: flex; gap: 10px; }
-      .tool-btn {
-        background: #333;
-        border: 1px solid var(--border);
-        color: var(--text);
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
+      .module-tag { 
+        display: inline-block; 
+        background: var(--accent); 
+        color: white; 
+        padding: 3px 10px; 
+        border-radius: 4px; 
+        font-size: 10px; 
+        font-weight: 700;
+        margin-bottom: 16px; 
+        letter-spacing: 1px;
       }
-      .tool-btn:hover { background: #444; }
       
+      h2 { color: #fff; margin-top: 0; font-size: 24px; font-weight: 700; }
+      h3 { color: #fff; margin-top: 30px; border-bottom: 1px solid var(--border); padding-bottom: 8px; font-size: 18px; }
+      
+      .challenge-box { 
+        background: rgba(78, 201, 176, 0.08); 
+        border-left: 4px solid var(--success); 
+        padding: 20px; 
+        margin: 30px 0; 
+        border-radius: 0 8px 8px 0;
+      }
+
       #hint-content, #solution-content {
         display: none;
         margin-top: 10px;
-        padding: 15px;
-        background: #111;
-        border: 1px dashed #555;
+        padding: 20px;
+        background: rgba(0,0,0,0.3);
+        border: 1px dashed var(--border);
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', monospace;
         font-size: 13px;
-        color: #bbb;
+        color: var(--text-dim);
         white-space: pre-wrap;
       }
-
-      /* Editor/Console Pane */
+      
+      /* Editor Area */
       #workspace-pane {
         flex: 1.5;
         display: flex;
         flex-direction: column;
-        background-color: #1e1e1e;
+        background: #121212;
         position: relative;
       }
+      
       .pane-header {
-        background-color: var(--bg-side);
+        height: 40px;
+        background: rgba(24, 24, 24, 0.6);
+        border-bottom: var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
         color: var(--text-dim);
-        padding: 8px 15px;
         font-size: 11px;
         text-transform: uppercase;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid var(--border);
+        font-weight: 700;
+        letter-spacing: 1px;
       }
+      
       #run-btn {
-        background-color: #0e6328;
+        background: #388a34;
         color: white;
         border: none;
-        padding: 4px 12px;
-        border-radius: 3px;
-        cursor: pointer;
-        font-weight: bold;
+        padding: 5px 16px;
+        border-radius: 4px;
+        font-weight: 600;
         font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s;
       }
-      #run-btn:hover { background-color: #128033; }
       
-      #editor-container { flex: 2; display: flex; overflow: hidden; position: relative; }
-      #line-numbers {
-        width: 40px;
-        background-color: #1a1a1a;
-        color: #666;
-        text-align: right;
-        padding: 10px 5px;
-        font-family: 'Consolas', monospace;
-        font-size: 14px;
-        border-right: 1px solid var(--border);
+      #run-btn:hover { background: #2d7329; transform: translateY(-1px); }
+
+      #editor-container {
+        flex: 2;
+        position: relative;
         overflow: hidden;
-        z-index: 5;
+        display: flex;
+      }
+      
+      #line-numbers {
+        width: 50px;
+        background: #121212;
+        color: #5a5a5a;
+        text-align: right;
+        padding: 10px 15px 10px 0;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 14px;
+        line-height: 22px;
         user-select: none;
+        border-right: 1px solid #222;
+        z-index: 5;
       }
 
       #editor-inner-wrapper {
@@ -167,118 +241,145 @@
         flex: 1;
         overflow: hidden;
       }
-
+      
       #code-editor, #code-highlighted {
         position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        padding: 10px;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
         margin: 0;
-        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        padding: 10px;
+        font-family: 'JetBrains Mono', monospace;
         font-size: 14px;
-        line-height: 1.5;
+        line-height: 22px;
         white-space: pre;
-        box-sizing: border-box;
+        tab-size: 4;
         border: none;
         outline: none;
-        word-wrap: normal;
-        overflow-wrap: normal;
-        tab-size: 4;
+        box-sizing: border-box;
       }
-
+      
       #code-editor {
+        z-index: 4;
         background: transparent;
         color: transparent;
-        -webkit-text-fill-color: transparent; /* Fix for Safari/iOS */
-        z-index: 4;
         caret-color: #fff;
         resize: none;
         overflow: auto;
       }
-
+      
       #code-highlighted {
-        color: #d4d4d4;
         z-index: 3;
+        color: #d4d4d4;
+        background: #121212;
         pointer-events: none;
-        background: #1e1e1e;
         overflow: hidden;
       }
 
-      /* IntelliSense Menu */
+      /* Console / Terminal */
+      #log-container {
+        flex: 1;
+        padding: 16px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        overflow-y: auto;
+        line-height: 1.6;
+        background: #000;
+        border-top: 1px solid var(--border);
+      }
+      
+      .log-entry { margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+      .log-info { color: #d4d4d4; }
+      .log-error { color: #f48771; }
+      .log-warn { color: #cca700; }
+
+      /* Tokens */
+      .token-keyword { color: #569cd6; }
+      .token-string { color: #ce9178; }
+      .token-comment { color: #6a9955; font-style: italic; }
+      .token-number { color: #b5cea8; }
+      .token-builtin { color: #4ec9b0; }
+      .token-function { color: #dcdcaa; }
+      .token-operator { color: #d4d4d4; }
+      
+      .line-error { background: rgba(244, 135, 113, 0.1); }
+      .error-squiggle { border-bottom: 2px dotted #f48771; }
+      .gutter-error { color: #f48771 !important; background-color: rgba(244, 135, 113, 0.1); }
+
+      /* Suggestions */
       #suggestions-menu {
+        display: none;
         position: absolute;
         z-index: 1000;
         background: #252526;
         border: 1px solid #454545;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        display: none;
-        flex-direction: row;
-        min-width: 300px;
+        border-radius: 8px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        width: 400px;
         max-height: 200px;
-        font-family: 'Segoe UI', sans-serif;
+        overflow: hidden;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
       }
-      #suggestions-list { flex: 1; overflow-y: auto; border-right: 1px solid #454545; }
-      #suggestions-doc { flex: 1.2; padding: 10px; font-size: 11px; color: #bbb; background: #1e1e1e; overflow-y: auto; }
-      .suggestion-item { padding: 4px 8px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: #ccc; }
-      .suggestion-item.selected { background: #094771; color: white; }
-      .suggestion-icon { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; border-radius: 2px; color: #fff; }
-      .icon-K { background: #569cd6; } .icon-M { background: #b5cea8; color: #000; } .icon-C { background: #4ec9b0; color: #000; } .icon-S { background: #ce9178; } .icon-V { background: #9cdcfe; color: #000; }
-
-      /* Syntax Tokens */
-      .token-comment { color: #6a9955; font-style: italic; }
-      .token-string { color: #ce9178; }
-      .token-keyword { color: #569cd6; }
-      .token-builtin { color: #4ec9b0; }
-      .token-number { color: #b5cea8; }
-      .token-function { color: #dcdcaa; }
-      .token-operator { color: #d4d4d4; }
-      .token-punctuation { color: #808080; }
-
-      /* Error Visuals */
-      .error-squiggle { border-bottom: 2px wavy #f44336; }
-      .gutter-error { background-color: rgba(244, 67, 54, 0.3); color: #f44336 !important; font-weight: bold; }
-      .line-error { background-color: rgba(244, 67, 54, 0.08); }
+      #suggestions-list { flex: 1; overflow-y: auto; border-right: 1px solid rgba(255,255,255,0.1); }
+      #suggestions-doc { flex: 1.2; padding: 12px; font-size: 12px; color: var(--text-dim); background: rgba(0,0,0,0.2); overflow-y: auto; }
+      .suggestion-item { padding: 6px 12px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #ccc; }
+      .suggestion-item.selected { background: var(--selected-bg, #094771); color: white; }
+      .suggestion-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border-radius: 3px; color: #fff; }
+      .icon-K { background: #569cd6; } .icon-M { background: #b180d7; }
       
-      #log-container { 
-        flex: 1; 
-        overflow-y: auto; 
-        padding: 15px; 
-        border-top: 1px solid var(--border); 
-        font-family: 'Consolas', monospace;
+      #teacher-feedback {
+        flex: 0.6;
+        background: rgba(0, 122, 204, 0.05);
+        padding: 20px;
+        font-style: italic;
+        color: var(--success);
+        overflow-y: auto;
+        border-top: 1px solid var(--border);
         font-size: 13px;
-        background: #111;
+        line-height: 1.6;
       }
-      .log-entry { margin-bottom: 6px; border-bottom: 1px solid #1a1a1a; padding-bottom: 4px; }
-      .log-info { color: #d4d4d4; }
-      .log-error { color: #f48771; }
-      .log-warn { color: #cca700; }
       
-      code { background-color: #2d2d2d; padding: 2px 5px; border-radius: 3px; font-family: monospace; }
-      pre { background-color: #111; padding: 15px; border-radius: 5px; overflow-x: auto; border: 1px solid #333; }
+      .tool-buttons { margin-top: 24px; display: flex; gap: 12px; }
+      .tool-btn {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 6px 16px;
+        font-size: 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .tool-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--text-dim); }
+      
+      code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+      pre { background: #000; padding: 20px; border-radius: 8px; overflow-x: auto; border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
     </style>
 </head>
 <body>
     <header>
-      <h1>JS ACADEMY: COMPLETE MASTERCLASS <span style="font-size: 10px; color: #888; font-weight: normal; margin-left: 10px;">v2.2.0</span></h1>
-      <span class="status">● LIVE SESSION</span>
+      <h1>JS Academy: The Professional Engine <span style="font-size: 10px; color: #555; font-weight: normal; margin-left: 10px;">v3.0.0</span></h1>
+      <span class="status">● SECURE ENVIRONMENT</span>
     </header>
     
     <main>
       <div id="sidebar">
-        <div class="sidebar-header">Curriculum</div>
+        <div class="sidebar-header">Core Curriculum</div>
         <div id="curriculum-list"></div>
       </div>
       
       <div id="lesson-pane">
         <div id="lesson-content">
-          <div class="module-tag">WELCOME</div>
-          <h2>Begin your Journey</h2>
-          <p>Select Module 1 from the sidebar to start learning JavaScript from absolute zero.</p>
+          <div class="module-tag">SYSTEM INITIALIZED</div>
+          <h2>Ready to Deploy</h2>
+          <p>Select a module from the sidebar to begin your architectural training in high-performance JavaScript.</p>
         </div>
         
         <div id="tool-section" style="display:none;">
           <div class="tool-buttons">
-            <button class="tool-btn" onclick="toggleTool('hint')">💡 Get Hint</button>
-            <button class="tool-btn" onclick="toggleTool('solution')">🎯 View Solution</button>
+            <button class="tool-btn" onclick="toggleTool('hint')">💡 Technical Hint</button>
+            <button class="tool-btn" onclick="toggleTool('solution')">🎯 Code Solution</button>
           </div>
           <div id="hint-content"></div>
           <div id="solution-content"></div>
@@ -287,14 +388,14 @@
       
       <div id="workspace-pane">
         <div class="pane-header">
-          <span>Editor</span>
-          <button id="run-btn" onclick="runEditorCode()">▶ RUN CODE</button>
+          <span>Banking Mainframe Terminal</span>
+          <button id="run-btn" onclick="runEditorCode()">▶ EXECUTE PROCEDURE</button>
         </div>
         <div id="editor-container">
           <div id="line-numbers">1</div>
           <div id="editor-inner-wrapper">
              <div id="code-highlighted"></div>
-             <textarea id="code-editor" spellcheck="false" placeholder="Write your logic here..."></textarea>
+             <textarea id="code-editor" spellcheck="false" placeholder="Awaiting logic input..."></textarea>
           </div>
           
           <div id="suggestions-menu">
@@ -303,16 +404,17 @@
           </div>
         </div>
         
-        <div class="pane-header">Terminal Output</div>
+        <div class="pane-header">Output Stream</div>
         <div id="log-container"></div>
         
-        <div class="pane-header" style="background-color: #007acc; color: white;">Teacher's Guidance</div>
-        <div id="teacher-feedback" style="flex: 0.5; background-color: #1e1e1e; padding: 15px; font-style: italic; color: #success; overflow-y: auto;">
-          "Welcome to the Academy! I am your lead developer today. Select a lesson from the sidebar, and let's start building our Banking Terminal together."
+        <div class="pane-header" style="background-color: var(--accent); color: white;">Executive Oversight</div>
+        <div id="teacher-feedback">
+          "Welcome to the mainframe. Select a procedural task from the curriculum to begin."
         </div>
       </div>
     </main>
     
+    <?!= include('Modules'); ?>
     <?!= include('TutorJS'); ?>
 </body>
 </html>

@@ -17,16 +17,14 @@ function include(filename) {
  * Serves the web application.
  */
 function doGet(e) {
-  var paramPage = (e && e.parameter && e.parameter.page) ? e.parameter.page.toLowerCase() : 'index';
-  var page = 'Index'; // Default
+  var paramPage = (e && e.parameter && e.parameter.page) ? e.parameter.page.toLowerCase() : 'tutor';
+  var page = 'tutor'; // Absolute Default
   
-  if (paramPage === 'tutor') {
-    page = 'tutor';
-  } else if (paramPage === 'index') {
+  if (paramPage === 'index') {
     page = 'Index';
   }
   
-  var title = page === 'Index' ? 'IDE Tutor: Professional Workspace' : 'IDE Tutor: Learning Center';
+  var title = page === 'Index' ? 'IDE Tutor: Professional Workspace' : 'JS Academy: The Professional Engine';
   
   return HtmlService.createTemplateFromFile(page)
     .evaluate()

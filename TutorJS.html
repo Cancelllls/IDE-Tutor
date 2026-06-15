@@ -1,43 +1,19 @@
 <script>
 /**
- * JS Academy Client-Side Engine v2.1.0
- * Sequential Data Injection Mode.
+ * Tutor Engine v3.0.0 — Professional Multi-Language Integration
+ * Powered by IDE Tutor Execution Core.
  */
 
+// --- STATE MANAGEMENT ---
 let currentMIdx = 0;
 let currentLIdx = 0;
 let completedModules = JSON.parse(localStorage.getItem('academy_progress') || '[]');
+let activeLanguage = 'javascript';
+let tabSize = 4;
+let suggestionsVisible = false;
+let activeSuggestions = [];
+let selectedSuggestionIdx = 0;
 let lintProblems = [];
-
-const pathways = [
-    "PATHWAY 1: Foundations",
-    "PATHWAY 2: The Engine",
-    "PATHWAY 3: Data Architecture",
-    "PATHWAY 4: High Performance"
-];
-
-const IntelliSenseDb = [
-    { name: "let", type: "K", desc: "Declares a block-scoped variable." },
-    { name: "const", type: "K", desc: "Declares a block-scoped constant." },
-    { name: "function", type: "K", desc: "Declares a function." },
-    { name: "return", type: "K", desc: "Returns a value from a function." },
-    { name: "if", type: "K", desc: "Conditional if statement." },
-    { name: "else", type: "K", desc: "Alternative branch." },
-    { name: "async", type: "K", desc: "Defines async function." },
-    { name: "await", type: "K", desc: "Awaits a promise." },
-    { name: "console.log", type: "M", desc: "Logs to the terminal." }
-];
-
-const tokenizerRules = {
-    comment: /\/\/.*|\/\*[\s\S]*?\*\//,
-    string: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/,
-    number: /\b\d+(?:\.\d+)?\b/,
-    keyword: /\b(let|const|var|function|return|if|else|for|while|do|switch|case|default|break|continue|try|catch|finally|throw|new|this|class|extends|async|await|true|false|null|undefined)\b/,
-    builtin: /\b(console|Math|JSON|Array|Object|String|Number|Boolean|Map|Set|Promise|Date|setTimeout|setInterval|Intl|Reflect|Proxy|WeakMap|WeakSet)\b/,
-    function: /\b([a-zA-Z_$]\w*)\s*(?=\()/,
-    operator: /[-+*/%=!&|^<>~?:]+|\.{3}/,
-    punctuation: /[{}()\[\],;.]/
-};
 
 const editor = document.getElementById('code-editor');
 const codeHighlighted = document.getElementById('code-highlighted');
@@ -47,582 +23,273 @@ const suggestionsList = document.getElementById('suggestions-list');
 const suggestionsDoc = document.getElementById('suggestions-doc');
 const logContainer = document.getElementById('log-container');
 
-let suggestionsVisible = false;
-let activeSuggestions = [];
-let selectedSuggestionIdx = 0;
-
-// --- CURRICULUM START ---
-const courseData = [
-  {
-    "title": "Module 1: Variables & Memory (Memory as a Vault)",
-    "lessons": [{
-      "name": "Renting Your First Safety Deposit Box",
-      "content": "<h3>The Architecture of Memory</h3><p>In the world of high finance, a bank is only as good as its vault. Imagine the computer's <b>RAM (Random Access Memory)</b> as the massive floor space of a high-security vault. When you write code, you are effectively renting space on that floor.</p><h3>The Variable: A Labeled Box</h3><p>A <b>Variable</b> is like a safety deposit box. You don't just throw your money (data) onto the floor; you put it in a box and put a <b>label</b> on it so you can find it later. Without a label, the security guards (the JavaScript Engine) wouldn't know which pile of data belongs to you.</p><ul><li><b>let:</b> This keyword tells the bank, 'I want to rent a box, and I might come back later to swap what is inside.'</li><li><b>Assignment (=):</b> The equals sign is the act of physically placing the asset into the box.</li></ul><p><b>Why does this matter?</b> Because memory allocation is expensive. By naming your variables clearly, you are creating a map of your vault, making your 'bank' (program) efficient and organized.</p><div class='challenge-box'><b>Challenge:</b> Rent a box by declaring a variable named <code>accountBalance</code> and place the number <code>5000</code> inside it.</div>",
-      "hint": "Use the keyword 'let' followed by your label name, then use '=' to assign the value.",
-      "solution": "let accountBalance = 5000;"
-    }]
+// --- TOKENIZER RULES (IDE CORE) ---
+const tokenizerRules = {
+  javascript: {
+    comment: /\/\/.*|\/\*[\s\S]*?\*\//,
+    string: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/,
+    number: /\b0x[a-fA-F0-9]+\b|\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/,
+    keyword: /\b(let|const|var|function|return|if|else|for|while|do|switch|case|default|break|continue|try|catch|finally|throw|new|this|class|extends|import|export|from|typeof|instanceof|in|of|async|await|yield|true|false|null|undefined|void|delete|super|with|debugger|static|get|set)\b/,
+    builtin: /\b(console|document|window|Math|JSON|Array|Object|String|Number|Boolean|Map|Set|Promise|RegExp|Date|Error|Symbol|parseInt|parseFloat|isNaN|isFinite|encodeURI|decodeURI|setTimeout|setInterval|fetch|require)\b/,
+    function: /\b([a-zA-Z_$]\w*)\s*(?=\()/,
+    operator: /[-+*/%=!&|^<>~?:]+|\.{3}/,
+    punctuation: /[{}()\[\],;.]/
   },
-  {
-    "title": "Module 2: Data Types (Categorizing Assets)",
-    "lessons": [{
-      "name": "Gold Bars vs. Paper Contracts",
-      "content": "<h3>Asset Classification</h3><p>A bank handles different types of assets. You wouldn't store a physical gold bar in the same way you'd store a written loan contract. In JavaScript, we must <b>categorize</b> our data so the system knows how to handle it.</p><ul><li><b>Numbers (Gold Bars):</b> These are used for math. You can add them, divide them, and calculate interest.</li><li><b>Strings (Paper Contracts):</b> These represent text, like a customer's name. They are always wrapped in <code>\"quotes\"</code>, which act like the plastic sleeve protecting a document.</li></ul><p><b>The 'Why':</b> If you try to add a customer's name to their balance, the computer gets confused—it's like trying to add a physical bar of gold to the word 'John'. By defining <b>Data Types</b>, we ensure the integrity of our financial operations.</p><div class='challenge-box'><b>Challenge:</b> Create a string variable named <code>customerName</code> set to <code>\"James Bond\"</code> and a number variable named <code>vaultPin</code> set to <code>700</code>.</div>",
-      "hint": "Remember that strings need quotes, but numbers do not.",
-      "solution": "let customerName = \"James Bond\";\nlet vaultPin = 700;"
-    }]
+  python: {
+    comment: /#.*/,
+    string: /"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/,
+    number: /\b\d+(?:\.\d+)?\b/,
+    keyword: /\b(def|return|if|elif|else|for|while|break|continue|pass|import|from|as|in|is|and|or|not|try|except|finally|raise|assert|class|with|lambda|global|nonlocal|True|False|None|yield|async|await)\b/,
+    builtin: /\b(print|input|len|range|int|float|str|list|dict|tuple|set|bool|type|isinstance|hasattr|getattr|setattr|map|filter|zip|enumerate|sorted|reversed|min|max|sum|abs|round|open|super|property|staticmethod|classmethod)\b/,
+    decorator: /@\w+/,
+    function: /\b([a-zA-Z_]\w*)\s*(?=\()/,
+    operator: /[-+*/%=!&|^<>~?:]/,
+    punctuation: /[{}()\[\],;.]/
   },
-  {
-    "title": "Module 3: Arithmetic (Interest & Fees: Math as a Machine)",
-    "lessons": [{
-      "name": "The Automated Interest Machine",
-      "content": "<h3>Calculations in the Ledger</h3><p>In a bank, the 'Math Machine' never stops. Every transaction, fee, and interest payment is an arithmetic operation. Think of operators (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>) as the gears inside a mechanical calculator.</p><h3>Standard Operations</h3><ul><li><b>Addition (+):</b> A deposit into the account.</li><li><b>Subtraction (-):</b> A withdrawal or a bank fee.</li><li><b>Multiplication (*):</b> Calculating compound interest or tax.</li><li><b>Division (/):</b> Splitting a bill or calculating monthly installments.</li></ul><p><b>The 'Why':</b> Computers are essentially high-speed calculators. Every time you update a balance, you aren't just changing a number; you are running a financial 'transaction' through the CPU's arithmetic logic unit.</p><div class='challenge-box'><b>Challenge:</b> A customer has <code>1000</code> dollars. They deposit <code>500</code>, but the bank takes a <code>20</code> dollar fee. Calculate the <code>finalBalance</code> in one line.</div>",
-      "hint": "Start with 1000, add 500, and subtract 20.",
-      "solution": "let finalBalance = 1000 + 500 - 20;"
-    }]
-  },
-  {
-    "title": "Module 4: Constants (Security: Immutable Ledgers)",
-    "lessons": [{
-      "name": "The Unchangeable Security Seal",
-      "content": "<h3>The Immutable Record</h3><p>In banking, some things <b>must never change</b>. Once a Bank's Tax ID or a Customer's Social Security Number is entered into the system, changing it could lead to fraud or systemic collapse. We call these <b>Constants</b>.</p><h3>The 'const' Security Seal</h3><p>When you use <code>const</code> instead of <code>let</code>, you are placing a lead security seal on the box. If any 'thief' (or buggy code) tries to change the value inside, the JavaScript engine will throw an error and shut down the operation immediately.</p><p><b>The 'Why':</b> Protection. Using <code>const</code> by default makes your code 'Immutable'. It ensures that your most sensitive bank settings remain exactly as they were on the day the bank opened.</p><div class='challenge-box'><b>Challenge:</b> Declare a constant named <code>ROUTING_NUMBER</code> and set it to <code>987654321</code>.</div>",
-      "hint": "Use 'const' instead of 'let' to ensure the value cannot be reassigned.",
-      "solution": "const ROUTING_NUMBER = 987654321;"
-    }]
-  },
-  {
-    "title": "Module 5: Template Literals (UI: Communicating with Customers)",
-    "lessons": [{
-      "name": "Personalizing the Customer Receipt",
-      "content": "<h3>The Reception Desk</h3><p>A bank isn't just vaults and gears; it's about communication. When a customer asks for their balance, you don't just bark a number at them. You provide a professional, formatted statement.</p><h3>Template Literals (The Modern Form)</h3><p>Instead of messy string addition, we use <b>Backticks (`)</b>. This allows us to create a template where we can 'inject' our variables directly into the text using the <code>${variable}</code> syntax.</p><p><b>The 'Why':</b> Readability. Imagine trying to print a 100-page bank statement using old-fashioned typewriters. Template literals are like modern digital printers—they allow you to mix text and data seamlessly without making mistakes.</p><div class='challenge-box'><b>Challenge:</b> Use backticks to create a variable <code>message</code> that says: <code>\"Welcome, Alice! Your balance is $1250.\"</code> (Use the variables <code>name</code> and <code>balance</code>).</div>",
-      "hint": "Place variables inside ${} within backticks: `Hello ${user}`",
-      "solution": "let name = \"Alice\";\nlet balance = 1250;\nlet message = `Welcome, ${name}! Your balance is $${balance}.`;"
-    }]
-  },
-  {
-    "title": "Module 6: Comparison (Verification: Checking for Funds)",
-    "lessons": [{
-      "name": "The Security Gatekeeper",
-      "content": "<h3>Verification Logic</h3><p>Every time a customer tries to withdraw money, a <b>Security Guard</b> stands at the gate. The guard asks one simple question: 'Is the requested amount <b>less than or equal to</b> the funds available in the vault?'</p><h3>The Comparison Operators</h3><ul><li><b>> and <:</b> Checking if a balance is above or below a threshold.</li><li><b>>= and <=:</b> The standard for withdrawals (you can take exactly what you have).</li><li><b>===:</b> The 'ID Check'. Does the PIN entered exactly match the PIN on file?</li></ul><p><b>The 'Why':</b> Comparison is the heart of decision-making. These operators return a simple 'Pass' or 'Fail', allowing the bank to protect its assets from overdrafts.</p><div class='challenge-box'><b>Challenge:</b> Compare <code>balance</code> (100) and <code>withdrawal</code> (150). Create a variable <code>canWithdraw</code> that stores the result of <code>balance >= withdrawal</code>.</div>",
-      "hint": "Simply write: let result = balance >= withdrawal;",
-      "solution": "let balance = 100;\nlet withdrawal = 150;\nlet canWithdraw = balance >= withdrawal;"
-    }]
-  },
-  {
-    "title": "Module 7: Booleans (States: Binary Switches)",
-    "lessons": [{
-      "name": "The Vault Alarm System",
-      "content": "<h3>The Binary State</h3><p>Inside a bank, many things are binary. A door is either <b>Open</b> or <b>Closed</b>. An alarm is either <b>On</b> or <b>Off</b>. A customer is either <b>Verified</b> or <b>Not Verified</b>. In JavaScript, we represent this using <b>Booleans</b>.</p><h3>True and False</h3><p>A Boolean has only two possible values: <code>true</code> or <code>false</code>. Think of them as a green light and a red light on a security panel. They are the simplest form of data, but they power the logic of the entire world.</p><p><b>The 'Why':</b> Efficiency. The computer doesn't need to read a whole sentence to know if the vault is locked. It just needs a single 'bit' of information: True or False.</p><div class='challenge-box'><b>Challenge:</b> Create a variable <code>isVaultOpen</code> and set it to <code>false</code>. Then create <code>hasPermission</code> and set it to <code>true</code>.</div>",
-      "hint": "Booleans do not use quotes. Just type true or false.",
-      "solution": "let isVaultOpen = false;\nlet hasPermission = true;"
-    }]
-  },
-  {
-    "title": "Module 8: If Logic (Decision Branches: The Gated Entry)",
-    "lessons": [{
-      "name": "The Automated Teller Decision",
-      "content": "<h3>The Gated Entry</h3><p>Imagine a customer walks up to an ATM. This is the <code>if</code> statement—the 'Fork in the Road'.</p><p>When the JavaScript engine hits an <code>if</code> statement, it pauses at the gate. If the condition is <code>true</code>, it enters the 'VIP Lounge' (the code inside the curly braces <code>{}</code>). If it is <code>false</code>, it walks right past it.</p><div class='challenge-box'><b>Challenge:</b> Write an <code>if</code> statement that checks if <code>balance > 0</code>. If it is, log <code>\"Account Active\"</code> to the console.</div>",
-      "hint": "if (condition) { console.log(\"... \"); }",
-      "solution": "let balance = 500;\nif (balance > 0) {\n  console.log(\"Account Active\");\n}"
-    }]
-  },
-  {
-    "title": "Module 9: Multi-Logic (Tiers: Gold/Platinum Rules)",
-    "lessons": [{
-      "name": "The Tiered Account System",
-      "content": "<h3>Silver, Gold, and Platinum</h3><p>Modern banks have different rules for different customers. A 'Standard' account might have a $5 fee, while a 'Platinum' account has $0. To handle this, we use <code>else if</code> and <code>else</code>—the multi-path security gate.</p><ul><li><b>If:</b> Is this a Platinum member?</li><li><b>Else If:</b> Okay, maybe they are just Gold?</li><li><b>Else:</b> Fine, they are a Standard member.</li></ul><div class='challenge-box'><b>Challenge:</b> Create a variable <code>tier</code>. If <code>tier</code> is \"Gold\", log \"0% Fee\". Else if \"Silver\", log \"2% Fee\". Otherwise, log \"5% Fee\".</div>",
-      "hint": "Use if (tier === \"Gold\") { ... } else if (tier === \"Silver\") { ... } else { ... }",
-      "solution": "let tier = \"Gold\";\nif (tier === \"Gold\") {\n  console.log(\"0% Fee\");\n} else if (tier === \"Silver\") {\n  console.log(\"2% Fee\");\n} else {\n  console.log(\"5% Fee\");\n}"
-    }]
-  },
-  {
-    "title": "Module 10: [MILESTONE] ATM Simulator (Full Logic Integration)",
-    "lessons": [{
-      "name": "Building the Final Terminal Logic",
-      "content": "<h3>Putting it All Together</h3><p>You have learned to rent space in the vault (Variables), categorize your assets (Data Types), run the interest machine (Arithmetic), and guard the gates (Logic). Now, it is time to build a functioning **ATM Simulator**.</p><p>A true ATM must verify a PIN, check if the customer has enough money, and then subtract the withdrawal amount while printing a professional receipt.</p><div class='challenge-box'><b>Challenge:</b> Create a script with <code>pin</code> (1234) and <code>balance</code> (1000). If the <code>enteredPin</code> matches, check if <code>withdrawalAmount</code> (200) is <= <code>balance</code>. If both pass, subtract the amount and log the new balance.</div>",
-      "hint": "Nest an 'if' inside another 'if', or use multiple checks to verify the user.",
-      "solution": "let pin = 1234;\nlet balance = 1000;\nlet enteredPin = 1234;\nlet withdrawalAmount = 200;\n\nif (enteredPin === pin) {\n  if (withdrawalAmount <= balance) {\n    balance = balance - withdrawalAmount;\n    console.log(`Success! New balance: $${balance}`);\n  } else {\n    console.log(\"Insufficient funds.\");\n  }\n} else {\n  console.log(\"Invalid PIN.\");\n}"
-    }]
-  },
-  {
-    "title": "Module 11: Functions & Hoisting (The Automated Teller)",
-    "lessons": [{
-      "name": "Defining the Banking Procedure",
-      "content": "<h3>The Automated Teller</h3><p>In our banking terminal, a <b>Function</b> is like an <b>Automated Teller Machine (ATM)</b>. Instead of manually writing the logic to process a withdrawal every time a customer walks in, we create a reusable 'procedure'. Once defined, we can 'call' this teller as many times as needed.</p><p><b>Hoisting</b> is a unique JavaScript behavior where function declarations are moved to the top of their scope during the compilation phase. Imagine the bank's manual: even if the teller arrives late, the instructions (the function) were already printed in the handbook at the start of the day.</p><ul><li><b>Function Declaration:</b> These are fully hoisted. You can call them before they appear in the code.</li><li><b>Function Expression:</b> These are NOT hoisted. If you assign a function to a <code>const</code>, the teller doesn't exist until the code reaches that line.</li></ul><div class='challenge-box'><b>Challenge:</b> Create a function declaration named <code>getBankName</code> that returns 'Global JavaScript Bank'. Then, create a function expression named <code>calculateInterest</code> that takes a balance and returns balance * 0.05.</div>",
-      "hint": "Use the 'function' keyword for the declaration. Use 'const calculateInterest = function(balance)...' for the expression.",
-      "solution": "function getBankName() { return 'Global JavaScript Bank'; }\nconst calculateInterest = function(balance) { return balance * 0.05; };"
-    }]
-  },
-  {
-    "title": "Module 12: Arrow Functions & Lexical 'this' (Modern Tellers)",
-    "lessons": [{
-      "name": "The Streamlined Kiosk",
-      "content": "<h3>Modern Tellers</h3><p>As the bank upgrades, we introduce <b>Arrow Functions</b>. Think of these as sleek, modern touchscreen kiosks. They are more concise than traditional tellers and have a very special property: <b>Lexical 'this'</b>.</p><p>In a traditional function, the word <code>this</code> can change depending on who is calling the function. However, an Arrow Function does not create its own <code>this</code> context. It 'borrows' it from its surrounding environment (the bank branch it was built in). This makes them perfect for callbacks where you need to maintain access to the bank's internal state.</p><ul><li><b>Concise Syntax:</b> <code>(param) => expression</code></li><li><b>No 'this' binding:</b> They inherit <code>this</code> from the parent scope.</li></ul><div class='challenge-box'><b>Challenge:</b> Convert this traditional function to an arrow function: <code>function(amount) { return amount * 1.2; }</code> and assign it to a variable called <code>applyTax</code>.</div>",
-      "hint": "Remove the 'function' keyword and add '=>' after the parameters.",
-      "solution": "const applyTax = (amount) => amount * 1.2;"
-    }]
-  },
-  {
-    "title": "Module 13: Parameters, Defaults & Rest (Flexible Deposits)",
-    "lessons": [{
-      "name": "Handling Variable Inputs",
-      "content": "<h3>Flexible Deposits</h3><p>Not every customer provides the same information. <b>Default Parameters</b> allow our tellers to assume certain values if the customer forgets them. For example, if a customer doesn't specify a currency, we assume 'USD'.</p><p><b>Rest Parameters</b> (<code>...args</code>) allow the teller to accept a 'handful of coins'—an indefinite number of arguments—and bundle them into a single array for processing. This is like a merchant depositing a bag of mixed coins without counting them first; the teller will handle the 'Bulk Processing' internally.</p><ul><li><b>Defaults:</b> <code>function deposit(amount, currency = 'USD')</code></li><li><b>Rest:</b> <code>function totalDeposits(...amounts)</code></li></ul><div class='challenge-box'><b>Challenge:</b> Write a function <code>processMultiDeposit</code> that uses a rest parameter to take any number of amounts and returns the sum of all of them.</div>",
-      "hint": "Use the .reduce() method on the rest parameter array or a simple loop.",
-      "solution": "const processMultiDeposit = (...amounts) => amounts.reduce((acc, val) => acc + val, 0);"
-    }]
-  },
-  {
-    "title": "Module 14: Scope, Closures & Encapsulation (The Private Ledger)",
-    "lessons": [{
-      "name": "Securing the Vault",
-      "content": "<h3>The Private Ledger</h3><p>In banking, security is everything. <b>Scope</b> determines where variables are 'visible'. <b>Closures</b> are like a <b>Private Ledger</b> kept inside a locked vault. A closure occurs when a function is created inside another function, allowing the inner function to 'remember' the variables of the outer function even after the outer function has finished executing.</p><p>This is the foundation of <b>Encapsulation</b>. We can create a 'Bank Account' where the balance is hidden from the outside world, and can only be modified by the specific 'Teller' (inner function) we provide.</p><ul><li><b>Global Scope:</b> The bank lobby (everyone sees it).</li><li><b>Local Scope:</b> The manager's office (only people inside see it).</li><li><b>Closure:</b> A persistent connection to a private variable.</li></ul><div class='challenge-box'><b>Challenge:</b> Create a function <code>createVault</code>. Inside, declare a variable <code>secretCode = 1234</code>. Return an inner function that checks if a provided code matches the secretCode.</div>",
-      "hint": "Return a function that takes an argument and compares it to the variable in the outer scope.",
-      "solution": "function createVault() { const secretCode = 1234; return (input) => input === secretCode; }"
-    }]
-  },
-  {
-    "title": "Module 15: Higher-Order Functions (Managerial Oversight)",
-    "lessons": [{
-      "name": "Functions as Strategy",
-      "content": "<h3>Managerial Oversight</h3><p>A Bank Manager doesn't personally count every penny; they oversee the process. In JavaScript, <b>Higher-Order Functions (HOFs)</b> are functions that either take other functions as arguments or return them. This is <b>Managerial Oversight</b>: the manager provides the 'Strategy' (callback function), and the HOF executes it.</p><p>For example, a <code>transactionLogger</code> function might take a 'format' function as an argument. The logger decides *when* to log, but the format function decides *how* it looks.</p><ul><li><b>Callbacks:</b> The specific task assigned to a clerk.</li><li><b>HOF:</b> The manager directing the clerks.</li></ul><div class='challenge-box'><b>Challenge:</b> Write a function <code>audit</code> that takes two arguments: an <code>amount</code> and a <code>callback</code>. The <code>audit</code> function should return the result of <code>callback(amount)</code>.</div>",
-      "hint": "Simply call the callback function and pass the amount into it.",
-      "solution": "const audit = (amount, callback) => callback(amount);"
-    }]
-  },
-  {
-    "title": "Module 16: Arrays: Map & Transform (Currency Conversion)",
-    "lessons": [{
-      "name": "Mass Transformation",
-      "content": "<h3>Currency Conversion</h3><p>When our bank expands internationally, we need to transform entire lists of transactions. <b>Array.map()</b> is our tool for <b>Bulk Processing</b>. It creates a *new* array by applying a function to every single item in the original list.</p><p>Imagine a stack of USD checks. <code>map</code> is like an automated scanner that reads each check, converts the value to Euros, and prints a brand new stack of Euro checks. The original USD checks remain untouched.</p><ul><li><b>Non-mutating:</b> It doesn't change the original array.</li><li><b>1-to-1 Mapping:</b> The output array is always the same length as the input.</li></ul><div class='challenge-box'><b>Challenge:</b> You have an array <code>[100, 200, 300]</code>. Use <code>.map()</code> to create a new array where each amount is increased by a 10% service fee.</div>",
-      "hint": "Multiply each value by 1.1 inside the map function.",
-      "solution": "[100, 200, 300].map(amount => amount * 1.1);"
-    }]
-  },
-  {
-    "title": "Module 17: Arrays: Filter & Find (Fraud Detection)",
-    "lessons": [{
-      "name": "Screening Transactions",
-      "content": "<h3>Fraud Detection</h3><p>Banks must monitor for suspicious activity. <b>Array.filter()</b> acts as a security sieve. It looks at every transaction and only lets the ones that meet a specific condition pass through into a new array.</p><p><b>Array.find()</b> is different; it's like a bounty hunter. It searches the ledger and stops the moment it finds the *first* transaction that matches your criteria (like a specific Transaction ID). Once found, it returns that single item and stops looking.</p><ul><li><b>Filter:</b> Returns an array of ALL matches.</li><li><b>Find:</b> Returns only the FIRST match (or undefined).</li></ul><div class='challenge-box'><b>Challenge:</b> From the array <code>[50, 5000, 20, 8000]</code>, use <code>.filter()</code> to find all transactions greater than 1000 (potential fraud).</div>",
-      "hint": "Return true if the value is greater than 1000.",
-      "solution": "[50, 5000, 20, 8000].filter(amount => amount > 1000);"
-    }]
-  },
-  {
-    "title": "Module 18: Arrays: Reduce (The Central Ledger)",
-    "lessons": [{
-      "name": "The Bottom Line",
-      "content": "<h3>The Central Ledger</h3><p>At the end of the day, the bank needs one number: the total balance. <b>Array.reduce()</b> is the most powerful <b>Bulk Processing</b> tool. It takes an entire list of values and 'reduces' them down to a single value (like a sum, an average, or even a complex object).</p><p>Think of a <b>Ledger Accumulator</b>. You start with 0 (the initial value). You look at the first transaction, add it to the total, then carry that total to the next line. By the time you reach the bottom of the page, you have the final balance.</p><ul><li><b>Accumulator:</b> The running total.</li><li><b>Current Value:</b> The transaction you are currently processing.</li></ul><div class='challenge-box'><b>Challenge:</b> Use <code>.reduce()</code> to sum the array <code>[10, 20, 30]</code> starting with an initial value of 0.</div>",
-      "hint": "The callback takes (acc, curr) and returns acc + curr.",
-      "solution": "[10, 20, 30].reduce((acc, curr) => acc + curr, 0);"
-    }]
-  },
-  {
-    "title": "Module 19: Destructuring (Asset Unpacking)",
-    "lessons": [{
-      "name": "Extracting Account Details",
-      "content": "<h3>Asset Unpacking</h3><p>When a customer hands over a complex <b>Account Object</b>, we don't always need everything. <b>Destructuring</b> allows us to 'unpack' specific pieces of data (like the account number and balance) directly into variables.</p><p>Instead of writing <code>const bal = account.balance</code> repeatedly, we use curly braces to 'pluck' the properties we want. This makes our code cleaner and prevents us from carrying around 'heavy' objects we don't fully need.</p><ul><li><b>Object Destructuring:</b> <code>const { balance, id } = account;</code></li><li><b>Array Destructuring:</b> <code>const [first, second] = transactions;</code></li></ul><div class='challenge-box'><b>Challenge:</b> Destructure the <code>name</code> and <code>type</code> from this object: <code>{ name: 'Savings', type: 'Personal', id: 99 }</code>.</div>",
-      "hint": "Use 'const { name, type } = ...' syntax.",
-      "solution": "const { name, type } = { name: 'Savings', type: 'Personal', id: 99 };"
-    }]
-  },
-  {
-    "title": "Module 20: [MILESTONE] Transaction Engine (Batch Processing Milestone)",
-    "lessons": [{
-      "name": "The End-of-Day Reconciliation",
-      "content": "<h3>The Milestone: Transaction Engine</h3><p>Welcome to the final stage of your banking core training. You are now tasked with building a <b>Batch Processing Engine</b>. This engine will take an array of raw transaction objects, filter out the invalid ones, transform them into a standardized format, and calculate the final branch balance.</p><p>This milestone combines everything: <b>Functions</b> for logic, <b>Arrow Functions</b> for speed, <b>Array Methods</b> for processing, and <b>Destructuring</b> for data handling. You are no longer just a teller; you are the System Architect.</p><div class='challenge-box'><b>Challenge:</b> Create a function <code>runReconciliation</code> that takes an array of objects like <code>{ amt: 100, status: 'valid' }</code>. 1. Filter for 'valid' status. 2. Map to extract just the 'amt'. 3. Reduce to find the total sum.</div>",
-      "hint": "Chain your methods: .filter(...).map(...).reduce(...)",
-      "solution": "const runReconciliation = (txs) => txs.filter(t => t.status === 'valid').map(t => t.amt).reduce((a, b) => a + b, 0);"
-    }]
-  },
-  {
-    "title": "Module 21: Object Prototypes & Inheritance (The Shared Blueprint)",
-    "lessons": [{
-      "name": "The Master Blueprint in the Basement",
-      "content": "<h3>The Efficiency of the Shared Blueprint</h3><p>Imagine a bank with millions of accounts. If every single account carried its own physical rulebook for 'How to Calculate Interest,' the bank's vault (Memory) would be overflowing with redundant paper. Instead, JavaScript uses <b>Prototypes</b>.</p><p>Think of the Prototype as a <b>Shared Blueprint</b> kept in the basement. Every account 'references' this blueprint. When you ask an account to calculate interest, and it doesn't know how, it looks 'up the chain' to the shared blueprint.</p><ul><li><b>__proto__:</b> The invisible umbilical cord connecting an object to its blueprint.</li><li><b>Object.create():</b> Creating a new asset specifically linked to a master blueprint.</li></ul><div class='challenge-box'><b>Challenge:</b> Create a master blueprint called <code>accountTemplate</code> with a property <code>bankName</code> set to \"Global Reserve\". Then, create <code>myAccount</code> using <code>Object.create()</code>.</div>",
-      "hint": "Use Object.create(accountTemplate);",
-      "solution": "const accountTemplate = { bankName: \"Global Reserve\" }; const myAccount = Object.create(accountTemplate);"
-    }]
-  },
-  {
-    "title": "Module 22: Classes & Constructors (The Modern Blueprint)",
-    "lessons": [{
-      "name": "The Prefabricated Construction Crew",
-      "content": "<h3>The Evolution of Architecture</h3><p>In modern banking software, we don't just copy objects; we use <b>Classes</b>. A Class is an architectural drawing. It isn't a building yet; it is the <i>plan</i> for the building.</p><p>The <b>Constructor</b> is the construction crew. When you call <code>new Account()</code>, the constructor runs immediately, laying the foundation and setting the initial balance.</p><ul><li><b>class:</b> The declaration of the blueprint.</li><li><b>this:</b> A reference to the specific building being constructed right now.</li></ul><div class='challenge-box'><b>Challenge:</b> Create a class <code>Account</code> with a constructor that takes <code>initialBalance</code> and assigns it to <code>this.balance</code>.</div>",
-      "hint": "class Name { constructor(param) { this.x = param; } }",
-      "solution": "class Account { constructor(initialBalance) { this.balance = initialBalance; } }"
-    }]
-  },
-  {
-    "title": "Module 23: Static Methods & Private Fields (The Executive Suite)",
-    "lessons": [{
-      "name": "The Vault-Within-a-Vault",
-      "content": "<h3>Securing the Executive Suite</h3><p>Some data is too sensitive for the general public. We use <b>Private Fields</b> (prefixed with <code>#</code>) to create a vault-within-a-vault. These fields cannot be touched from outside the class—not even by the customer!</p><p><b>Static Methods</b> are like the bank's global policies. They don't belong to one specific account; they belong to the Bank itself (the Class). For example, a method to check the current global exchange rate.</p><ul><li><b>#privateField:</b> Security Seals that only internal methods can break.</li><li><b>static:</b> Tools owned by the Institution, not the individual.</li></ul><div class='challenge-box'><b>Challenge:</b> In a class <code>Vault</code>, create a private field <code>#pin</code> and a static method <code>identify()</code> that returns \"Security System v1.0\".</div>",
-      "hint": "Use # before the variable name and the static keyword for methods.",
-      "solution": "class Vault { #pin; static identify() { return \"Security System v1.0\"; } }"
-    }]
-  },
-  {
-    "title": "Module 24: Error Handling (The Safety Net: Try/Catch)",
-    "lessons": [{
-      "name": "The Fire Suppression System",
-      "content": "<h3>Surviving the Crash</h3><p>In high-frequency trading, a single error can crash the entire system. <b>Try/Catch</b> is your bank's fire suppression system. We 'try' to execute a transaction, but if it 'throws' a spark (an error), we 'catch' it and handle it gracefully instead of letting the building burn down.</p><ul><li><b>try:</b> Attempting a risky operation (like connecting to a remote vault).</li><li><b>catch:</b> The emergency procedure that runs if the operation fails.</li></ul><div class='challenge-box'><b>Challenge:</b> Wrap a <code>console.log(nonExistentVar)</code> in a <code>try/catch</code> block. In the catch block, log \"Error Intercepted\".</div>",
-      "hint": "try { ... } catch (err) { ... }",
-      "solution": "try { console.log(nonExistentVar); } catch (err) { console.log(\"Error Intercepted\"); }"
-    }]
-  },
-  {
-    "title": "Module 25: Custom Errors & Validation (Audit Rules: Throwing)",
-    "lessons": [{
-      "name": "The Whistle-Blower",
-      "content": "<h3>Blowing the Whistle</h3><p>Sometimes the code is technically 'correct' but financially 'illegal.' If a user tries to withdraw more money than they have, JavaScript won't stop them automatically. We must <b>throw</b> our own errors—acting as the bank's Internal Audit.</p><p>When we <code>throw</code>, we are raising a red flag that stops the assembly line immediately.</p><div class='challenge-box'><b>Challenge:</b> Create a function <code>validateWithdrawal</code> that takes <code>amt</code>. If <code>amt > 1000</code>, <code>throw</code> a new <code>Error</code> saying \"Limit Exceeded\".</div>",
-      "hint": "throw new Error(\"message\");",
-      "solution": "function validateWithdrawal(amt) { if (amt > 1000) { throw new Error(\"Limit Exceeded\"); } }"
-    }]
-  },
-  {
-    "title": "Module 26: Maps & Sets (Modern Asset Collections)",
-    "lessons": [{
-      "name": "The High-Speed Filing Cabinet",
-      "content": "<h3>Optimized Record Keeping</h3><p>Standard objects are like messy desks. <b>Maps</b> are high-speed industrial filing cabinets. They are better for banking because they remember the order of entries and allow any data type (even objects!) to be used as a key.</p><p><b>Sets</b> are unique vault keys. A Set automatically rejects duplicates, making it perfect for storing a list of unique Customer IDs.</p><ul><li><b>Map:</b> Key-Value pairs with better performance.</li><li><b>Set:</b> A collection of strictly unique items.</li></ul><div class='challenge-box'><b>Challenge:</b> Create a <code>Map</code> called <code>ledger</code> and <code>set</code> a key of \"A1\" to the value 500. Then create a <code>Set</code> of <code>uniqueIds</code> and <code>add</code> \"ID_1\".</div>",
-      "hint": "new Map() and new Set()",
-      "solution": "const ledger = new Map(); ledger.set(\"A1\", 500); const uniqueIds = new Set(); uniqueIds.add(\"ID_1\");"
-    }]
-  },
-  {
-    "title": "Module 27: Symbols (Secret Handshakes: Unique IDs)",
-    "lessons": [{
-      "name": "The Invisible Ink",
-      "content": "<h3>The Secret Handshake</h3><p><b>Symbols</b> are the ultimate security tool. Every Symbol is guaranteed to be 100% unique, even if they have the same description. In banking, we use them as 'Hidden Keys' on objects that other developers or external APIs cannot accidentally overwrite.</p><p>It's like writing a serial number in <b>Invisible Ink</b>; only those who know where to look can see it.</p><div class='challenge-box'><b>Challenge:</b> Create a Symbol called <code>SECRET_KEY</code> and use it as a property key on an object <code>vault</code> with the value \"Unlocked\".</div>",
-      "hint": "const sym = Symbol('desc'); obj[sym] = 'val';",
-      "solution": "const SECRET_KEY = Symbol(\"auth\"); const vault = { [SECRET_KEY]: \"Unlocked\" };"
-    }]
-  },
-  {
-    "title": "Module 28: Iterators & Generators (The Ledger Stream)",
-    "lessons": [{
-      "name": "The Infinite Ledger Conveyor Belt",
-      "content": "<h3>Streaming the Data</h3><p>Imagine a ledger with 10 billion transactions. You cannot load them all into memory at once. <b>Generators</b> (the <code>function*</code>) allow us to process transactions one by one, like a conveyor belt.</p><p>The <code>yield</code> keyword pauses the teller, hands you one transaction, and waits for you to ask for the next one. This is <b>Lazy Evaluation</b>—the pinnacle of memory efficiency.</p><div class='challenge-box'><b>Challenge:</b> Create a generator function <code>transactionStream</code> that <code>yield</code>s 100 then 200.</div>",
-      "hint": "function* name() { yield x; }",
-      "solution": "function* transactionStream() { yield 100; yield 200; }"
-    }]
-  },
-  {
-    "title": "Module 29: Regular Expressions (Identity Pattern Scanning)",
-    "lessons": [{
-      "name": "The Digital Fingerprint Scanner",
-      "content": "<h3>Pattern Recognition</h3><p><b>Regular Expressions (Regex)</b> are the digital fingerprint scanners of the bank. Instead of checking if a string is exactly equal to another, we check if it <i>matches a pattern</i>. Is it a valid email? Does it look like a credit card number?</p><p>We use patterns like <code>/\\d/</code> (match a digit) to scan through thousands of documents in milliseconds.</p><div class='challenge-box'><b>Challenge:</b> Create a regex <code>accountRegex</code> that checks if a string contains exactly 5 digits. Use <code>^</code> and <code>$</code>.</div>",
-      "hint": "/^\\d{5}$/",
-      "solution": "const accountRegex = /^\\d{5}$/;"
-    }]
-  },
-  {
-    "title": "Module 30: [MILESTONE] Identity System (Verification Milestone)",
-    "lessons": [{
-      "name": "The Grand Architect's Challenge",
-      "content": "<h3>Milestone 3: The Identity Firewall</h3><p>It is time to combine your architectural knowledge. You are tasked with building the bank's <b>Identity Verification System</b>. It must use Classes for structure, Private Fields for security, and Regex for pattern matching.</p><div class='challenge-box'><b>Challenge:</b> Create a class <code>Validator</code> with a private field <code>#pattern = /^ID-\\d{3}$/</code>. Add a method <code>check(val)</code> that returns true if <code>val</code> matches the private pattern.</div>",
-      "hint": "Use this.#pattern.test(val) inside the method.",
-      "solution": "class Validator { #pattern = /^ID-\\d{3}$/; check(val) { return this.#pattern.test(val); } }"
-    }]
-  },
-  {
-    "title": "Module 31: The Event Loop & Concurrency (The Service Queue)",
-    "lessons": [{
-      "name": "The Single-Teller Bottleneck",
-      "content": "<h3>The Service Queue Architecture</h3><p>JavaScript is a <b>single-threaded</b> language, meaning it has only one <b>Call Stack</b>. Imagine a bank with only <b>one teller</b>. If a customer demands a complex audit that takes 10 minutes, the entire line stops. This is 'blocking' the main thread.</p><h3>The Waiting Room (Task Queue)</h3><p>To prevent freezing, the bank uses a <b>Waiting Room</b>. When a long task (like a network request) starts, the teller hands it off to a specialized department (Web APIs) and immediately services the next customer. When the long task is finished, it doesn't just cut in line; it enters the <b>Callback Queue</b>. The <b>Event Loop</b> is the manager who waits until the teller is free before allowing the next finished task to return to the window.</p><ul><li><b>Call Stack:</b> The teller's current task.</li><li><b>Task Queue:</b> The line of finished 'waiting room' tasks.</li><li><b>Event Loop:</b> The mechanism that moves tasks from the queue to the stack.</li></ul><div class='challenge-box'><b>Challenge:</b> Use <code>setTimeout</code> to simulate a background task that logs \"Audit Finished\" after 1000ms without blocking the immediate log of \"Serving Next Customer\".</div>",
-      "hint": "setTimeout(() => { ... }, ms);",
-      "solution": "setTimeout(() => console.log(\"Audit Finished\"), 1000); console.log(\"Serving Next Customer\");"
-    }]
-  },
-  {
-    "title": "Module 32: Callbacks & Promises (The Future Contract)",
-    "lessons": [{
-      "name": "The Future Value Receipt",
-      "content": "<h3>The Future Contract</h3><p>A <b>Promise</b> is like a high-security receipt given to a customer. It says: 'I don't have your funds yet, but I <b>promise</b> to give them to you (Resolve) or tell you why I couldn't (Reject).'</p><h3>States of a Contract</h3><p>A Promise exists in one of three states:</p><ul><li><b>Pending:</b> The transaction is still being processed.</li><li><b>Fulfilled:</b> The money has arrived (then()).</li><li><b>Rejected:</b> The transaction failed (catch()).</li></ul><div class='challenge-box'><b>Challenge:</b> Create a <code>new Promise</code> that resolves with the string \"Funds Approved\" after a short delay.</div>",
-      "hint": "new Promise((resolve) => resolve(value));",
-      "solution": "const p = new Promise((resolve) => { setTimeout(() => resolve(\"Funds Approved\"), 500); });"
-    }]
-  },
-  {
-    "title": "Module 33: Async / Await Pattern (The Synchronous Appearance)",
-    "lessons": [{
-      "name": "The Streamlined Wire Transfer",
-      "content": "<h3>Synchronous Appearance</h3><p>While Promises are powerful, 'Callback Hell' makes the ledger messy. <b>Async/Await</b> is syntactic sugar that makes asynchronous code look like a clean, top-to-bottom procedure. It's like a teller who 'pauses' their own timeline to wait for a <b>Wire Transfer</b> to clear, without stopping the rest of the bank.</p><h3>The Rules of Engagement</h3><ul><li><b>async:</b> Marks a function as returning a Promise.</li><li><b>await:</b> Pauses execution until the Promise settles.</li></ul><div class='challenge-box'><b>Challenge:</b> Write an <code>async</code> function <code>processTransfer</code> that <code>await</code>s a promise resolving to 500 and then logs it.</div>",
-      "hint": "async function name() { const result = await promise; }",
-      "solution": "async function processTransfer() { const amt = await Promise.resolve(500); console.log(amt); }"
-    }]
-  },
-  {
-    "title": "Module 34: Promise APIs (Parallel Branches: All/Race/Settled)",
-    "lessons": [{
-      "name": "Coordinating Multiple Branches",
-      "content": "<h3>The Global Reconciliation</h3><p>Often, a bank needs to check multiple branches simultaneously. We use <b>Promise APIs</b> to manage these parallel requests.</p><ul><li><b>Promise.all():</b> Waits for <b>all</b> branches to confirm. If even one fails, the whole operation fails.</li><li><b>Promise.race():</b> Returns the result of the <b>fastest</b> branch to respond.</li><li><b>Promise.allSettled():</b> Waits for all branches to finish, regardless of success or failure.</li></ul><div class='challenge-box'><b>Challenge:</b> Use <code>Promise.all</code> to wait for two promises: one resolving to \"Vault A\" and one to \"Vault B\".</div>",
-      "hint": "Promise.all([p1, p2]).then(results => ...);",
-      "solution": "Promise.all([Promise.resolve(\"Vault A\"), Promise.resolve(\"Vault B\")]).then(console.log);"
-    }]
-  },
-  {
-    "title": "Module 35: Mocking Network Requests (The Test Branch: Fetch Simulation)",
-    "lessons": [{
-      "name": "Simulating the Mainframe",
-      "content": "<h3>The Test Branch Architecture</h3><p>In development, we don't want to hit the real production mainframe. We create <b>Mock Requests</b>. This involves simulating network latency and data responses using <code>setTimeout</code> and Promises.</p><p><b>The Why:</b> It allows you to build the UI and logic of the Banking Terminal even when the server is offline.</p><div class='challenge-box'><b>Challenge:</b> Create a function <code>fetchBalance</code> that returns a promise which resolves to <code>{bal: 1000}</code> after 200ms.</div>",
-      "hint": "return new Promise(res => setTimeout(() => res(data), 200));",
-      "solution": "const fetchBalance = () => new Promise(res => setTimeout(() => res({bal: 1000}), 200));"
-    }]
-  },
-  {
-    "title": "Module 36: Dates & Locales (Interest Timing: Formatting Currency)",
-    "lessons": [{
-      "name": "International Currency Standards",
-      "content": "<h3>The Globalization Department</h3><p>A global bank must display money correctly for every region. $1,000.00 in the US is 1.000,00 € in Germany. We use the <b>Intl (Internationalization)</b> API.</p><ul><li><b>Intl.NumberFormat:</b> Formats digits into currency.</li><li><b>Intl.DateTimeFormat:</b> Formats timestamps into local dates.</li></ul><div class='challenge-box'><b>Challenge:</b> Format the number <code>50000</code> as US Dollars ($50,000.00) using <code>Intl.NumberFormat</code>.</div>",
-      "hint": "new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);",
-      "solution": "const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }); console.log(formatter.format(50000));"
-    }]
-  },
-  {
-    "title": "Module 37: Proxy & Reflect (The Security Proxy: Interception)",
-    "lessons": [{
-      "name": "The Armed Guard Interceptor",
-      "content": "<h3>The Security Proxy</h3><p>A <b>Proxy</b> is a security guard standing in front of an object. Every time you try to read a property (get) or change one (set), the guard intercepts the request. <b>Reflect</b> is the official tool the guard uses to actually perform the action after validation.</p><p><b>The Analogy:</b> You don't just walk into the vault; you give your request to the guard. If the request is valid, the guard gets the item for you.</p><div class='challenge-box'><b>Challenge:</b> Create a Proxy for <code>{balance: 100}</code> that prevents setting the balance to a negative number.</div>",
-      "hint": "new Proxy(target, { set(t, p, v) { ... } });",
-      "solution": "const account = { balance: 100 }; const guard = new Proxy(account, { set(t, p, v) { if (p === 'balance' && v < 0) throw new Error('Debt Forbidden'); t[p] = v; return true; } });"
-    }]
-  },
-  {
-    "title": "Module 38: Bitwise Operators (Binary Security: Lower Level Logic)",
-    "lessons": [{
-      "name": "The Binary Permission Mask",
-      "content": "<h3>Lower-Level Security</h3><p>At the deepest level, bank permissions are stored as bits (0s and 1s). <b>Bitwise Operators</b> allow us to check multiple permissions (Read, Write, Execute) in a single number using 'masks'.</p><ul><li><b>AND (&):</b> Checks if a bit is set.</li><li><b>OR (|):</b> Sets a bit.</li><li><b>XOR (^):</b> Flips a bit.</li></ul><div class='challenge-box'><b>Challenge:</b> Define <code>READ = 1</code> and <code>WRITE = 2</code>. Use <code>|</code> to create a <code>userPerms</code> variable with both.</div>",
-      "hint": "let perms = READ | WRITE;",
-      "solution": "const READ = 1; const WRITE = 2; let userPerms = READ | WRITE;"
-    }]
-  },
-  {
-    "title": "Module 39: Performance & Memory (The Lean Ledger: Avoiding Leaks)",
-    "lessons": [{
-      "name": "The Lean Ledger Strategy",
-      "content": "<h3>Memory Leak Prevention</h3><p>A bank terminal that crashes after 100 transactions is a failure. <b>Memory Leaks</b> happen when we keep references to objects the bank no longer needs. The <b>Garbage Collector</b> is the janitor who clears out unused objects.</p><h3>Specialized Storage</h3><ul><li><b>WeakMap:</b> A map where keys are 'weakly held'. If no other reference to the key exists, the janitor can delete the entry automatically.</li></ul><div class='challenge-box'><b>Challenge:</b> Use a <code>WeakMap</code> to store a private 'security token' for an <code>account</code> object.</div>",
-      "hint": "const wm = new WeakMap(); wm.set(obj, val);",
-      "solution": "const wm = new WeakMap(); const account = {}; wm.set(account, \"SECURE_TOKEN_123\");"
-    }]
-  },
-  {
-    "title": "Module 40: [FINAL PROJECT] Global Terminal (The Graduation Project)",
-    "lessons": [{
-      "name": "Architecting the Global Terminal",
-      "content": "<h3>The Graduation Project</h3><p>You are now the Chief Architect. Your task is to build the <b>GlobalTerminal</b> class that integrates everything you've learned. It must handle async transactions, secure data with Proxies, format currency locally, and manage memory efficiently.</p><h3>Requirements:</h3><ul><li><b>Security:</b> Use a Proxy to protect account data.</li><li><b>Asynchrony:</b> Use async/await for simulated network transfers.</li><li><b>Localization:</b> Use Intl for receipts.</li><li><b>Architecture:</b> Use a Map to store accounts by ID.</li></ul><div class='challenge-box'><b>Challenge:</b> Implement a <code>GlobalTerminal</code> that has a <code>transfer</code> method and a secure <code>accounts</code> storage.</div>",
-      "hint": "Combine class, Proxy, and async/await.",
-      "solution": "class GlobalTerminal { constructor() { this.store = new Map(); this.formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }); } createAccount(id, initial) { const acc = { id, balance: initial }; this.store.set(id, new Proxy(acc, { set(t, p, v) { if (p === 'balance' && v < 0) return false; t[p] = v; return true; } })); } async transfer(fromId, toId, amt) { await new Promise(r => setTimeout(r, 100)); const a = this.store.get(fromId), b = this.store.get(toId); if (a && b && a.balance >= amt) { a.balance -= amt; b.balance += amt; return `Transferred ${this.formatter.format(amt)}`; } throw new Error('Failed'); } }"
-    }]
+  cpp: {
+    comment: /\/\/.*|\/\*[\s\S]*?\*\//,
+    string: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/,
+    number: /\b\d+(?:\.\d+)?\b/,
+    keyword: /\b(auto|break|case|catch|char|class|const|constexpr|continue|default|delete|do|double|else|enum|explicit|export|extern|false|float|for|friend|goto|if|inline|int|long|mutable|namespace|new|noexcept|nullptr|operator|override|private|protected|public|register|return|short|signed|sizeof|static|static_cast|struct|switch|template|this|throw|true|try|typedef|typeid|typename|union|unsigned|using|virtual|void|volatile|wchar_t|while)\b/,
+    builtin: /\b(std|cout|cin|endl|cerr|string|vector|map|set|pair|queue|stack|deque|array|bitset|list|unordered_map|unordered_set|unique_ptr|shared_ptr|make_unique|make_shared|move|forward|swap|sort|find|begin|end|size|push_back|pop_back|emplace_back|insert|erase|clear|empty|front|back|at|reserve|resize|capacity)\b/,
+    preprocessor: /#\s*(include|define|ifdef|ifndef|endif|if|elif|else|undef|pragma)\b.*|#include\s*<[^>]+>/,
+    function: /\b([a-zA-Z_]\w*)\s*(?=\()/,
+    operator: /[-+*/%=!&|^<>~?:]/,
+    punctuation: /[{}()\[\],;.]/
   }
-];
+};
+
+// --- CORE UTILITIES ---
+// --- CORE UTILITIES ---
+const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 function runLinter() {
-    const text = editor.value; lintProblems = []; const stack = []; const lines = text.split('\n');
-    for (let r = 0; r < lines.length; r++) {
-        const line = lines[r];
-        for (let c = 0; c < line.length; c++) {
-            const ch = line[c];
-            if ('{(['.includes(ch)) stack.push({ char: ch, line: r + 1 });
-            else if ('})]'.includes(ch)) {
-                const expected = { '{': '}', '(': ')', '[': ']' }[stack.length > 0 ? stack[stack.length-1].char : ''];
-                if (stack.length === 0 || ch !== expected) { lintProblems.push({ line: r + 1, severity: 'error' }); if (stack.length > 0) stack.pop(); }
-                else stack.pop();
-            }
-        }
+  const text = editor.value; lintProblems = []; const stack = []; const lines = text.split('\n');
+  for (let r = 0; r < lines.length; r++) {
+    const line = lines[r];
+    for (let c = 0; c < line.length; c++) {
+      const ch = line[c];
+      if ('{(['.includes(ch)) stack.push({ char: ch, line: r + 1 });
+      else if ('})]'.includes(ch)) {
+        const expected = { '{': '}', '(': ')', '[': ']' }[stack.length > 0 ? stack[stack.length-1].char : ''];
+        if (stack.length === 0 || ch !== expected) { lintProblems.push({ line: r + 1, severity: 'error' }); if (stack.length > 0) stack.pop(); }
+        else stack.pop();
+      }
     }
-    stack.forEach(s => lintProblems.push({ line: s.line, severity: 'error' }));
+  }
+  stack.forEach(s => lintProblems.push({ line: s.line, severity: 'error' }));
 }
 
 function highlightCode(markerIndex = -1) {
-    const text = editor.value; const tokens = [];
-    for (let [type, regex] of Object.entries(tokenizerRules)) {
-        let r = new RegExp(regex.source, 'g'); let m;
-        while ((m = r.exec(text)) !== null) { tokens.push({ start: m.index, end: r.lastIndex, type }); if (m.index === r.lastIndex) r.lastIndex++; }
+  const text = editor.value; 
+  const rules = tokenizerRules[activeLanguage] || tokenizerRules.javascript;
+  const tokens = [];
+  for (let [type, regex] of Object.entries(rules)) {
+    let r = new RegExp(regex.source, 'g'); let m;
+    while ((m = r.exec(text)) !== null) { tokens.push({ start: m.index, end: r.lastIndex, type }); if (m.index === r.lastIndex) r.lastIndex++; }
+  }
+  tokens.sort((a, b) => a.start - b.start);
+  const kept = []; let lastEnd = 0;
+  for (let t of tokens) { if (t.start >= lastEnd) { kept.push(t); lastEnd = t.end; } }
+  
+  let html = ""; let currentIndex = 0;
+  function renderRange(start, end) {
+    let sub = text.substring(start, end);
+    if (markerIndex >= start && markerIndex <= end) {
+      let rel = markerIndex - start;
+      return escapeHtml(sub.substring(0, rel)) + '<span id="intellisense-marker"></span>' + escapeHtml(sub.substring(rel));
     }
-    tokens.sort((a, b) => a.start - b.start);
-    const kept = []; let lastEnd = 0;
-    for (let t of tokens) { if (t.start >= lastEnd) { kept.push(t); lastEnd = t.end; } }
-    let html = ""; let currentIndex = 0;
-    const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    function renderRange(start, end) {
-        let sub = text.substring(start, end);
-        if (markerIndex >= start && markerIndex <= end) {
-            let rel = markerIndex - start;
-            return escape(sub.substring(0, rel)) + '<span id="intellisense-marker"></span>' + escape(sub.substring(rel));
-        }
-        return escape(sub);
-    }
-    for (let t of kept) {
-        if (t.start > currentIndex) html += renderRange(currentIndex, t.start);
-        html += `<span class="token-${t.type}">${escape(text.substring(t.start, t.end))}</span>`;
-        currentIndex = t.end;
-    }
-    if (currentIndex < text.length) html += renderRange(currentIndex, text.length);
-    if (markerIndex === text.length) html += '<span id="intellisense-marker"></span>';
-    const htmlLines = html.split('\n'); let finalHtml = "";
-    htmlLines.forEach((line, idx) => {
-        const lineNum = idx + 1; const hasError = lintProblems.some(p => p.line === lineNum);
-        const content = hasError ? `<span class="error-squiggle">${line || ' '}</span>` : (line || ' ');
-        finalHtml += `<div class="${hasError ? 'line-error' : ''}">${content}</div>`;
-    });
-    codeHighlighted.innerHTML = finalHtml + "\n ";
-    updateGutter();
+    return escapeHtml(sub);
+  }
+  for (let t of kept) {
+    if (t.start > currentIndex) html += renderRange(currentIndex, t.start);
+    html += `<span class="token-${t.type}">${escapeHtml(text.substring(t.start, t.end))}</span>`;
+    currentIndex = t.end;
+  }
+  if (currentIndex < text.length) html += renderRange(currentIndex, text.length);
+  if (markerIndex === text.length) html += '<span id="intellisense-marker"></span>';
+  
+  const htmlLines = html.split('\n'); let finalHtml = "";
+  htmlLines.forEach((line, idx) => {
+    const lineNum = idx + 1; const hasError = lintProblems.some(p => p.line === lineNum);
+    finalHtml += `<div class="${hasError ? 'line-error' : ''}">${line || ' '}</div>`;
+  });
+  codeHighlighted.innerHTML = finalHtml + "\n ";
+  updateGutter();
 }
 
 function updateGutter() {
-    const lines = editor.value.split('\n').length; let gutterHtml = "";
-    for (let i = 1; i <= lines; i++) {
-        const hasError = lintProblems.some(p => p.line === i);
-        gutterHtml += `<div class="${hasError ? 'gutter-error' : ''}">${i}</div>`;
-    }
-    lineNums.innerHTML = gutterHtml;
+  const lines = editor.value.split('\n').length; let gutterHtml = "";
+  for (let i = 1; i <= lines; i++) {
+    const hasError = lintProblems.some(p => p.line === i);
+    gutterHtml += `<div class="${hasError ? 'gutter-error' : ''}">${i}</div>`;
+  }
+  lineNums.innerHTML = gutterHtml;
 }
 
 function syncEditor() { runLinter(); highlightCode(); triggerIntelliSense(); }
 
+// --- INTELLISENSE ---
+const IntelliSenseDb = {
+  javascript: [
+    { name: "let", type: "K", desc: "Declares a block-scoped variable." },
+    { name: "const", type: "K", desc: "Declares a constant." },
+    { name: "function", type: "K", desc: "Declares a function." },
+    { name: "console.log", type: "M", desc: "Logs to the terminal." },
+    { name: "return", type: "K", desc: "Returns from a function." }
+  ],
+  python: [
+    { name: "print", type: "M", desc: "Python print function." },
+    { name: "def", type: "K", desc: "Python function definition." }
+  ]
+};
+
 function triggerIntelliSense() {
-    const textBefore = editor.value.substring(0, editor.selectionStart);
-    const lastWord = textBefore.match(/[a-zA-Z_0-9.:-]+$/);
-    const prefix = lastWord ? lastWord[0] : "";
-    if (prefix.length < 1) { hideSuggestions(); return; }
-    const matches = IntelliSenseDb.filter(item => item.name.toLowerCase().includes(prefix.toLowerCase()));
-    if (matches.length > 0) {
-        activeSuggestions = matches.slice(0, 10); selectedSuggestionIdx = 0;
-        renderSuggestions(); positionSuggestions();
-    } else hideSuggestions();
+  const textBefore = editor.value.substring(0, editor.selectionStart);
+  const lastWord = textBefore.match(/[a-zA-Z_0-9.:-]+$/);
+  const prefix = lastWord ? lastWord[0] : "";
+  if (prefix.length < 1) { hideSuggestions(); return; }
+  const matches = (IntelliSenseDb[activeLanguage] || []).filter(item => item.name.toLowerCase().startsWith(prefix.toLowerCase()));
+  if (matches.length > 0) {
+    activeSuggestions = matches.slice(0, 10); selectedSuggestionIdx = 0;
+    renderSuggestions(); positionSuggestions();
+  } else hideSuggestions();
 }
 
 function renderSuggestions() {
-    suggestionsList.innerHTML = "";
-    activeSuggestions.forEach((item, idx) => {
-        const div = document.createElement('div');
-        div.className = `suggestion-item ${idx === selectedSuggestionIdx ? 'selected' : ''}`;
-        div.innerHTML = `<span class="suggestion-icon icon-${item.type}">${item.type}</span><span>${item.name}</span>`;
-        div.onclick = () => insertSuggestion(item);
-        suggestionsList.appendChild(div);
-    });
-    suggestionsDoc.innerText = activeSuggestions[selectedSuggestionIdx].desc;
-    suggestionsMenu.style.display = 'flex'; suggestionsVisible = true;
+  suggestionsList.innerHTML = "";
+  activeSuggestions.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = `suggestion-item ${idx === selectedSuggestionIdx ? 'selected' : ''}`;
+    div.innerHTML = `<span class="suggestion-icon icon-${item.type}">${item.type}</span><span>${item.name}</span>`;
+    div.onclick = () => insertSuggestion(item);
+    suggestionsList.appendChild(div);
+  });
+  suggestionsDoc.innerText = activeSuggestions[selectedSuggestionIdx].desc;
+  suggestionsMenu.style.display = 'flex'; suggestionsVisible = true;
 }
 
 function positionSuggestions() {
-    highlightCode(editor.selectionStart);
-    const marker = document.getElementById('intellisense-marker');
-    if (marker) {
-        const rect = marker.getBoundingClientRect(); const wrap = document.getElementById('editor-container').getBoundingClientRect();
-        suggestionsMenu.style.top = `${rect.bottom - wrap.top + 5}px`; suggestionsMenu.style.left = `${rect.left - wrap.left}px`;
-    }
+  highlightCode(editor.selectionStart);
+  const marker = document.getElementById('intellisense-marker');
+  if (marker) {
+    const rect = marker.getBoundingClientRect(); const wrap = document.getElementById('editor-container').getBoundingClientRect();
+    suggestionsMenu.style.top = `${rect.bottom - wrap.top + 5}px`; suggestionsMenu.style.left = `${rect.left - wrap.left}px`;
+  }
 }
 
 function insertSuggestion(item) {
-    const textBefore = editor.value.substring(0, editor.selectionStart);
-    const lastWord = textBefore.match(/[a-zA-Z_0-9.:-]+$/);
-    const prefix = lastWord ? lastWord[0] : "";
-    const start = editor.selectionStart - prefix.length; const end = editor.selectionStart;
-    editor.value = editor.value.substring(0, start) + item.name + editor.value.substring(end);
-    editor.selectionStart = editor.selectionEnd = start + item.name.length;
-    hideSuggestions(); syncEditor(); editor.focus();
+  const textBefore = editor.value.substring(0, editor.selectionStart);
+  const lastWord = textBefore.match(/[a-zA-Z_0-9.:-]+$/);
+  const prefix = lastWord ? lastWord[0] : "";
+  const start = editor.selectionStart - prefix.length; const end = editor.selectionStart;
+  editor.value = editor.value.substring(0, start) + item.name + editor.value.substring(end);
+  editor.selectionStart = editor.selectionEnd = start + item.name.length;
+  hideSuggestions(); syncEditor(); editor.focus();
 }
 
 function hideSuggestions() { suggestionsMenu.style.display = 'none'; suggestionsVisible = false; }
 
-function saveProgress(mIdx) {
-    if (!completedModules.includes(mIdx)) {
-        completedModules.push(mIdx);
-        localStorage.setItem('academy_progress', JSON.stringify(completedModules));
-        renderSidebar();
-    }
-}
-
+// --- CURRICULUM LOGIC ---
 function renderSidebar() {
-    const list = document.getElementById('curriculum-list'); if (!list) return; list.innerHTML = '';
-    courseData.forEach((mod, mIdx) => {
-        if (mIdx % 10 === 0) {
-            const h = document.createElement('div'); h.className = 'sidebar-header';
-            h.innerText = pathways[Math.floor(mIdx/10)] || "ADVANCED"; list.appendChild(h);
-        }
-        const isCompleted = completedModules.includes(mIdx);
-        const group = document.createElement('div'); group.className = 'module-group';
-        group.innerHTML = `<div class="module-title" style="cursor:pointer;" onclick="loadLesson(${mIdx}, 0)">${isCompleted ? '✅ ' : ''}${mod.title}</div>`;
-        mod.lessons.forEach((lesson, lIdx) => {
-            const link = document.createElement('div');
-            link.className = `lesson-link ${currentMIdx === mIdx && currentLIdx === lIdx ? 'active' : ''}`;
-            link.innerText = lesson.name;
-            link.onclick = (e) => { e.stopPropagation(); loadLesson(mIdx, lIdx); };
-            group.appendChild(link);
-        });
-        list.appendChild(group);
+  const list = document.getElementById('curriculum-list'); if (!list) return; list.innerHTML = '';
+  courseData.forEach((mod, mIdx) => {
+    const isCompleted = completedModules.includes(mIdx);
+    const group = document.createElement('div'); group.className = 'module-group';
+    group.innerHTML = `<div class="module-title" onclick="loadLesson(${mIdx}, 0)">${isCompleted ? '✅ ' : ''}${mod.title}</div>`;
+    mod.lessons.forEach((lesson, lIdx) => {
+      const link = document.createElement('div');
+      link.className = `lesson-link ${currentMIdx === mIdx && currentLIdx === lIdx ? 'active' : ''}`;
+      link.innerText = lesson.name;
+      link.onclick = (e) => { e.stopPropagation(); loadLesson(mIdx, lIdx); };
+      group.appendChild(link);
     });
+    list.appendChild(group);
+  });
 }
 
 function loadLesson(mIdx, lIdx) {
-    currentMIdx = mIdx; currentLIdx = lIdx;
-    const lesson = courseData[mIdx].lessons[lIdx];
-    document.getElementById('lesson-content').innerHTML = `<div class="module-tag">${courseData[mIdx].title.toUpperCase()}</div><h2>${lesson.name}</h2>${lesson.content}`;
-    document.getElementById('hint-content').innerText = lesson.hint;
-    document.getElementById('solution-content').innerText = lesson.solution;
-    document.getElementById('hint-content').style.display = 'none';
-    document.getElementById('solution-content').style.display = 'none';
-    document.getElementById('tool-section').style.display = 'block';
-    document.getElementById('teacher-feedback').innerText = `Focus on ${lesson.name}. Think like a developer.`;
-    syncEditor(); renderSidebar();
+  currentMIdx = mIdx; currentLIdx = lIdx;
+  const lesson = courseData[mIdx].lessons[lIdx];
+  document.getElementById('lesson-content').innerHTML = `<div class="module-tag">${courseData[mIdx].title.toUpperCase()}</div><h2>${lesson.name}</h2>${lesson.content}`;
+  document.getElementById('hint-content').innerText = lesson.hint;
+  document.getElementById('solution-content').innerText = lesson.solution;
+  document.getElementById('hint-content').style.display = 'none';
+  document.getElementById('solution-content').style.display = 'none';
+  document.getElementById('tool-section').style.display = 'block';
+  syncEditor(); renderSidebar();
 }
 
+// --- EXECUTION ENGINE ---
 const appendToTerminal = (args, type) => {
-    const entry = document.createElement('div');
-    entry.className = `log-entry log-${type}`;
-    const timestamp = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const message = Array.from(args).map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
-    entry.innerHTML = `<span style="color: #888; font-size: 10px;">[${timestamp}]</span> <span style="margin-left:5px;">${message}</span>`;
-    logContainer.appendChild(entry);
-    logContainer.scrollTop = logContainer.scrollHeight;
+  const entry = document.createElement('div');
+  entry.className = `log-entry log-${type}`;
+  const message = Array.from(args).map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+  entry.innerHTML = `<span style="color: #888; font-size: 10px;">[${new Date().toLocaleTimeString()}]</span> <span style="margin-left:8px;">${message}</span>`;
+  logContainer.appendChild(entry);
+  logContainer.scrollTop = logContainer.scrollHeight;
 };
 
 const customConsole = { log: (...a) => appendToTerminal(a, 'info'), error: (...a) => appendToTerminal(a, 'error'), warn: (...a) => appendToTerminal(a, 'warn') };
-const customPrompt = (m) => { const v = window.prompt(m); appendToTerminal([`[INPUT]: ${v}`], 'warn'); return v; };
 
 window.runEditorCode = () => {
-    logContainer.innerHTML = '<div style="color: #007acc; font-size: 11px; margin-bottom: 10px;">-- Transaction Initiated --</div>';
-    const userCode = editor.value;
-    if (userCode.trim().length < 2) {
-        document.getElementById('teacher-feedback').innerHTML = "<span style='color: #f44336;'>The editor is empty. Add logic to proceed.</span>"; return;
+  logContainer.innerHTML = '<div style="color: var(--accent); font-size: 11px; margin-bottom: 10px;">-- EXECUTING PROCEDURE --</div>';
+  const code = editor.value;
+  if (code.trim().length < 2) return;
+
+  if (activeLanguage === 'javascript') {
+    executeJS(code);
+  } else {
+    // Multi-language Engine Bridge
+    const transpilerMap = { python: 'transpilePython', cpp: 'transpileCPP', java: 'transpileJava' };
+    const method = transpilerMap[activeLanguage];
+    if (method) {
+      google.script.run.withSuccessHandler(jsCode => executeJS(jsCode)).withFailureHandler(e => appendToTerminal([e.message], 'error'))[method](code);
     }
-    try {
-        const executor = new Function('console', 'prompt', `"use strict";\n${userCode}`);
-        executor(customConsole, customPrompt);
-        const normalize = (s) => s.replace(/\/\/.*|\/\*[\s\S]*?\*\/|[\s;]/g, "").toLowerCase().trim();
-        const normUser = normalize(userCode), normSol = normalize(courseData[currentMIdx].lessons[currentLIdx].solution);
-        if (normUser.includes(normSol) || normSol.includes(normUser)) {
-            document.getElementById('teacher-feedback').innerHTML = "<span style='color: #4ec9b0;'>Excellent! Verification successful. ✅</span>"; saveProgress(currentMIdx);
-        } else {
-            document.getElementById('teacher-feedback').innerHTML = "<span style='color: #ff9800;'>Execution complete. Logic check failed. Review your code.</span>";
-        }
-    } catch (e) { appendToTerminal([e.message], 'error'); document.getElementById('teacher-feedback').innerHTML = `<span style='color: #f44336;'>Runtime Exception: ${e.message}</span>`; }
+  }
 };
+
+function executeJS(jsCode) {
+  try {
+    const executor = new Function('console', 'prompt', `"use strict";\n${jsCode}`);
+    executor(customConsole, (m) => { const v = window.prompt(m); appendToTerminal([`[INPUT]: ${v}`], 'warn'); return v; });
+    verifyChallenge(jsCode);
+  } catch (e) { appendToTerminal([e.message], 'error'); }
+}
+
+function verifyChallenge(code) {
+  const normalize = (s) => s.replace(/\/\/.*|\/\*[\s\S]*?\*\/|[\s;]/g, "").toLowerCase().trim();
+  const sol = courseData[currentMIdx].lessons[currentLIdx].solution;
+  if (normalize(code).includes(normalize(sol))) {
+    document.getElementById('teacher-feedback').innerHTML = "<span style='color: var(--success);'>Verification successful. Core objective met. ✅</span>";
+    if (!completedModules.includes(currentMIdx)) {
+      completedModules.push(currentMIdx);
+      localStorage.setItem('academy_progress', JSON.stringify(completedModules));
+      renderSidebar();
+    }
+  } else {
+    document.getElementById('teacher-feedback').innerHTML = "<span style='color: #ff9800;'>Execution complete. logic verification failed. Review procedure.</span>";
+  }
+}
 
 window.toggleTool = (t) => { const el = document.getElementById(`${t}-content`); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
 
 window.onload = () => {
-    renderSidebar();
-    editor.addEventListener('input', syncEditor);
-    editor.addEventListener('scroll', () => { 
-        codeHighlighted.scrollTop = editor.scrollTop; 
-        codeHighlighted.scrollLeft = editor.scrollLeft; 
-        lineNums.scrollTop = editor.scrollTop; 
-    });
-    editor.addEventListener('keydown', function(e) {
-        if (suggestionsVisible && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-            e.preventDefault(); if (e.key === 'ArrowDown') selectedSuggestionIdx = (selectedSuggestionIdx + 1) % activeSuggestions.length;
-            else selectedSuggestionIdx = (selectedSuggestionIdx - 1 + activeSuggestions.length) % activeSuggestions.length;
-            renderSuggestions(); return;
-        }
-        if (suggestionsVisible && (e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); insertSuggestion(activeSuggestions[selectedSuggestionIdx]); return; }
-        if (e.key === 'Escape') { hideSuggestions(); return; }
-        if (e.key === 'Tab') {
-            e.preventDefault(); const s = this.selectionStart, end = this.selectionEnd;
-            this.value = this.value.substring(0, s) + "    " + this.value.substring(end);
-            this.selectionStart = this.selectionEnd = s + 4; syncEditor();
-        }
-    });
-    console.log("JS Academy Ready. v2.1.0");
+  renderSidebar();
+  editor.addEventListener('input', syncEditor);
+  editor.addEventListener('scroll', () => { codeHighlighted.scrollTop = editor.scrollTop; codeHighlighted.scrollLeft = editor.scrollLeft; lineNums.scrollTop = editor.scrollTop; });
+  editor.addEventListener('keydown', (e) => {
+    if (suggestionsVisible && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault(); if (e.key === 'ArrowDown') selectedSuggestionIdx = (selectedSuggestionIdx + 1) % activeSuggestions.length;
+      else selectedSuggestionIdx = (selectedSuggestionIdx - 1 + activeSuggestions.length) % activeSuggestions.length;
+      renderSuggestions(); return;
+    }
+    if (suggestionsVisible && (e.key === 'Enter' || e.key === 'Tab')) { e.preventDefault(); insertSuggestion(activeSuggestions[selectedSuggestionIdx]); return; }
+    if (e.key === 'Tab') {
+      e.preventDefault(); const s = editor.selectionStart, end = editor.selectionEnd;
+      editor.value = editor.value.substring(0, s) + "    " + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = s + 4; syncEditor();
+    }
+  });
 };
 </script>
