@@ -382,9 +382,23 @@ async function runPythonLocal(code) {
 }
 
 function verifyChallenge(code) {
-  const normalize = (s) => s.replace(/\/\/.*|\/\*[\s\S]*?\*\/|[\s;]/g, "").toLowerCase().trim();
+  const stripKeywords = (s) => s.replace(/\b(let|const|var|function|return|console\.log)\b/g, "");
+  const normalize = (s) => stripKeywords(s).replace(/[\s;"'`(){}\[\]]/g, "").toLowerCase().trim();
+  
   const sol = courseData[currentMIdx].lessons[currentLIdx].solution;
-  if (normalize(code).includes(normalize(sol))) {
+  const normCode = normalize(code);
+  const normSol = normalize(sol);
+
+  // Flexible Token Overlap Check
+  const getTokens = (s) => s.match(/[a-zA-Z0-9]+/g) || [];
+  const solTokens = getTokens(stripKeywords(sol).toLowerCase());
+  const codeTokens = getTokens(stripKeywords(code).toLowerCase());
+  
+  const matchedTokens = solTokens.filter(t => codeTokens.includes(t));
+  const overlap = solTokens.length ? (matchedTokens.length / solTokens.length) : 1;
+
+  // Pass if exact normalized match OR 75% key token overlap (forgiving syntax)
+  if (normCode.includes(normSol) || normSol.includes(normCode) && normCode.length > 5 || overlap >= 0.75) {
     document.getElementById('teacher-feedback').innerHTML = "<span style='color: var(--success);'>Verification successful. Core objective met. ✅</span>";
     if (!completedModules.includes(currentMIdx)) {
       completedModules.push(currentMIdx);
@@ -404,17 +418,55 @@ function verifyChallenge(code) {
       }
     }
   } else {
-    document.getElementById('teacher-feedback').innerHTML = "<span style='color: #ff9800;'>Execution complete. logic verification failed. Review procedure.</span>";
+    document.getElementById('teacher-feedback').innerHTML = "<span style='color: #ff3366;'>Execution complete. Logic verification failed. Ensure you are meeting the core requirements.</span>";
   }
 }
 
 window.toggleTool = (t) => { const el = document.getElementById(`${t}-content`); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
 
 window.onload = () => {
-  renderSidebar();
+  if (typeof google !== 'undefined' && google.script) {
+    google.script.run.withSuccessHandler((cloudData) => {
+      try {
+        const parsed = JSON.parse(cloudData);
+        if (Array.isArray(parsed) && parsed.length >= completedModules.length) {
+          completedModules = parsed;
+          localStorage.setItem('academy_progress', JSON.stringify(completedModules));
+        }
+      } catch(e) {}
+      updateXP();
+      renderSidebar();
+    }).loadProgressCloud();
+  } else {
+    updateXP();
+    renderSidebar();
+  }
+
   editor.addEventListener('input', syncEditor);
   editor.addEventListener('scroll', () => { codeHighlighted.scrollTop = editor.scrollTop; codeHighlighted.scrollLeft = editor.scrollLeft; lineNums.scrollTop = editor.scrollTop; });
+  
   editor.addEventListener('keydown', (e) => {
+    // Auto-closing Pairs logic
+    const pairs = { '{': '}', '[': ']', '(': ')', '"': '"', "'": "'" };
+    const closers = { '}': true, ']': true, ')': true, '"': true, "'": true };
+
+    // Skip over closing characters if already there
+    if (closers[e.key] && editor.value[editor.selectionStart] === e.key) {
+      e.preventDefault();
+      editor.selectionStart = editor.selectionEnd = editor.selectionStart + 1;
+      return;
+    }
+
+    // Auto-insert pairs (even if suggestions are visible)
+    if (pairs[e.key]) {
+      e.preventDefault(); 
+      const s = editor.selectionStart, end = editor.selectionEnd;
+      editor.value = editor.value.substring(0, s) + e.key + pairs[e.key] + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = s + 1; 
+      syncEditor();
+      return;
+    }
+
     if (suggestionsVisible && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
       e.preventDefault(); if (e.key === 'ArrowDown') selectedSuggestionIdx = (selectedSuggestionIdx + 1) % activeSuggestions.length;
       else selectedSuggestionIdx = (selectedSuggestionIdx - 1 + activeSuggestions.length) % activeSuggestions.length;
